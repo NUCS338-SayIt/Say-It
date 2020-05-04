@@ -48,7 +48,17 @@ class Covid19(object):
         :param span: int, e.g. 1 for today, 7 for this week
         :return: float
         """
-        raise NotImplementedError
+        df = self.df_us.copy()
+        if state:
+            df = self.df_states.copy()
+            df = df[df['state'] == state]
+        if state and county:
+            df = self.df_counties.copy()
+            df = df[(df['state'] == state) & (df['county'] == county)]
+        df = df.reset_index(drop=True)
+        idx = pd.Index(df['date']).get_loc(date)
+
+        return df.iloc[idx]['cases'] / df.iloc[idx - span if idx - span > 0 else 0]['cases'] - 1
 
     def confirmed_cases_comparison(self, date, state=None, county=None, scale='day'):
         """
@@ -59,7 +69,15 @@ class Covid19(object):
         :param scale: 'day' or 'week'
         :return: 'increase' or 'decrease'
         """
-        raise NotImplementedError
+        span = 1 if scale == 'day' else 7
+
+        from datetime import datetime, timedelta
+        dt = datetime.strptime(date, '%Y-%m-%d')
+        prev_dt = dt - timedelta(days=span)
+        prev_date = prev_dt.strftime('%Y-%m-%d')
+
+        return 'increase' if self.confirmed_cases(date, state, county, span) > self.confirmed_cases(prev_date, state, county, span) else 'decrease'
+
 
     """
         Death cases related
