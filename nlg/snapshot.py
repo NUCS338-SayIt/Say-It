@@ -15,13 +15,11 @@ def weekly_report(date, state=None, county=None):
     template = Template(template_raw)
 
     covid = Covid19()
-    new_confirmed_cases = covid.confirmed_cases(date, state=state, county=county, span=7)
-    cumulative_confirmed_cases = covid.confirmed_cases(date, state=state, county=county, span=999)
-    new_death_cases = 123  # covid.death_cases(date, state=state, county=county, span=7)
-    cumulative_death_cases = 1234  # covid.death_cases(date, state=state, county=county, span=999)
-    growth_rate = 10.0  # covid.growth_rate(date, state=state, county=county, span=7)
-    death_rate = 3.0  # covid.death_rate(date, state=state, county=county, span=7)
-    trend = 'higher'
+    new_confirmed_cases, cumulative_confirmed_cases = covid.confirmed_cases(date, state=state, county=county, span=7)
+    new_death_cases, cumulative_death_cases = covid.death_cases(date, state=state, county=county, span=7)
+    growth_rate = round(covid.growth_rate(date, state=state, county=county, span=7) * 100, 1)
+    death_rate = round(covid.death_rate(date, state=state, county=county, span=7)[0] * 100, 1)
+    trend = 'higher' if covid.death_rate_comparison(date, state=state, county=county, scale='week') == 'increase' else 'lower'
     per_capita_scale = 100000
     most_confirmed_cases_per_capita = covid.most_confirmed_cases_per_capita(date, state=state, scale=per_capita_scale, span=7)
     least_confirmed_cases_per_capita = covid.most_confirmed_cases_per_capita(date, state=state, scale=per_capita_scale, span=7, type='least')
@@ -44,6 +42,9 @@ def weekly_report(date, state=None, county=None):
     story = template.safe_substitute(d)
     print(story)
 
+    with open('../{}-{}.txt'.format(date, state if state else 'us'), 'a+') as f:
+        f.write(story)
+
 
 if __name__ == '__main__':
-    weekly_report('2020-05-02', state='California')
+    weekly_report('2020-05-03')

@@ -39,8 +39,14 @@ class Covid19(object):
             df = self.df_counties.copy()
             df = df[(df['state'] == state) & (df['county'] == county)]
         df = df.reset_index(drop=True)
-        idx = pd.Index(df['date']).get_loc(date) if df['date'].iloc[-1] <= date else 0
-        return df.iloc[idx]['cases'] - df.iloc[idx - span if idx - span > 0 else 0]['cases']
+        try:
+            idx = pd.Index(df['date']).get_loc(date)
+        except Exception:
+            return 0, 0
+
+        span_cases = df.iloc[idx]['cases'] - df.iloc[idx - span]['cases'] if idx - span > 0 else df.iloc[idx]['cases']
+        total_cases = df.iloc[idx]['cases']
+        return span_cases, total_cases
 
     def growth_rate(self, date, state=None, county=None, span=1):
         """
@@ -51,7 +57,17 @@ class Covid19(object):
         :param span: int, e.g. 1 for today, 7 for this week
         :return: float
         """
-        raise NotImplementedError
+        df = self.df_us.copy()
+        if state:
+            df = self.df_states.copy()
+            df = df[df['state'] == state]
+        if state and county:
+            df = self.df_counties.copy()
+            df = df[(df['state'] == state) & (df['county'] == county)]
+        df = df.reset_index(drop=True)
+        idx = pd.Index(df['date']).get_loc(date)
+
+        return df.iloc[idx]['cases'] / df.iloc[idx - span if idx - span > 0 else 0]['cases'] - 1
 
     def confirmed_cases_comparison(self, date, state=None, county=None, scale='day'):
         """
@@ -62,11 +78,20 @@ class Covid19(object):
         :param scale: 'day' or 'week'
         :return: 'increase' or 'decrease'
         """
-        raise NotImplementedError
+        span = 1 if scale == 'day' else 7
+
+        from datetime import datetime, timedelta
+        dt = datetime.strptime(date, '%Y-%m-%d')
+        prev_dt = dt - timedelta(days=span)
+        prev_date = prev_dt.strftime('%Y-%m-%d')
+
+        return 'increase' if self.confirmed_cases(date, state, county, span) > self.confirmed_cases(prev_date, state, county, span) else 'decrease'
+
 
     """
-    Death cases related
-    """
+        Death cases related
+        """
+
     def death_cases(self, date, state=None, county=None, span=1):
         """
         Death cases for today or this week
@@ -76,7 +101,23 @@ class Covid19(object):
         :param span: int, e.g. 1 for today, 7 for this week
         :return: int
         """
-        raise NotImplementedError
+        if span <= 0:
+            print('Span should be positive.\n')
+
+        df = self.df_us.copy()
+        if state:
+            df = self.df_states.copy()
+            df = df[df['state'] == state]
+        if state and county:
+            df = self.df_counties.copy()
+            df = df[(df['state'] == state) & (df['county'] == county)]
+        df = df.reset_index(drop=True)
+        idx = pd.Index(df['date']).get_loc(date)
+
+        span_deaths = df.iloc[idx]['deaths'] - df.iloc[idx - span if idx - span > 0 else 0]['deaths']
+        total_deaths = df.iloc[idx]['deaths']
+
+        return span_deaths, total_deaths
 
     def death_rate(self, date, state=None, county=None, span=1):
         """
@@ -85,9 +126,29 @@ class Covid19(object):
         :param state: str, e.g. 'Illinois'
         :param county: str, e.g. 'Cook'
         :param span: int, e.g. 1 for today, 7 for this week
-        :return: float
+        :return: 4 digits float
         """
-        raise NotImplementedError
+        if span <= 0:
+            print('Span should be positive.Default value is 1.\n')
+
+        df = self.df_us.copy()
+        if state:
+            df = self.df_states.copy()
+            df = df[df['state'] == state]
+        if state and county:
+            df = self.df_counties.copy()
+            df = df[(df['state'] == state) & (df['county'] == county)]
+        df = df.reset_index(drop=True)
+        idx = pd.Index(df['date']).get_loc(date)
+
+        span_deaths = df.iloc[idx]['deaths'] - df.iloc[idx - span if idx - span > 0 else 0]['deaths']
+        total_deaths = df.iloc[idx]['deaths']
+        span_cases = df.iloc[idx]['cases'] - df.iloc[idx - span if idx - span > 0 else 0]['cases']
+        total_cases = df.iloc[idx]['cases']
+        span_death_rate = float(format(span_deaths / span_cases, '.4f'))
+        total_death_rate = float(format(total_deaths / total_cases, '.4f'))
+
+        return span_death_rate, total_death_rate
 
     def death_rate_comparison(self, date, state=None, county=None, scale='day'):
         """
@@ -95,11 +156,35 @@ class Covid19(object):
         :param date: str, e.g. '2020-04-23'
         :param state: str, e.g. 'Illinois'
         :param county: str, e.g. 'Cook'
-        :param scale: 'day' or 'week'
-        :return: 'increase' or 'decrease'
+        :param scale: str, 'day' or 'week'
+        :return:str, 'increase' or 'decrease'
         """
-        raise NotImplementedError
+        df = self.df_us.copy()
+        if state:
+            df = self.df_states.copy()
+            df = df[df['state'] == state]
+        if state and county:
+            df = self.df_counties.copy()
+            df = df[(df['state'] == state) & (df['county'] == county)]
+        df = df.reset_index(drop=True)
+        idx = pd.Index(df['date']).get_loc(date)
+        if idx - 1 <= 0:
+            return 'Error, please input the right date.\n'
 
+        if scale == 'day':
+            if idx - 2 <= 0:
+                return 'Error. Please input the right date under scale day.\n'
+            today_death_rate = df.iloc[idx]['deaths'] - df.iloc[idx - 1]['deaths']
+            yesterday_death_rate = df.iloc[idx - 1]['deaths'] - df.iloc[idx - 2]['deaths']
+            return 'increase' if today_death_rate > yesterday_death_rate else 'decrease'
+        elif scale == 'week':
+            if idx - 14 <= 0:
+                return 'Error. Please input the right date under scale week.\n'
+            thisweek_death_rate = df.iloc[idx]['deaths'] - df.iloc[idx - 7]['deaths']
+            lastweek_death_rate = df.iloc[idx - 7]['deaths'] - df.iloc[idx - 14]['deaths']
+            return 'increase' if thisweek_death_rate > lastweek_death_rate else 'decrease'
+        else:
+            return 'Scale should be either day or week.\n'
     """
     Rank related
     """
@@ -147,7 +232,7 @@ class Covid19(object):
         :return: float
         """
         population = self.get_population(state=state, county=county)
-        confirmed_cases = self.confirmed_cases(date=date, state=state, county=county, span=span)
+        confirmed_cases = self.confirmed_cases(date=date, state=state, county=county, span=span)[0]
 
         return round(confirmed_cases / population * scale, 1)
 
