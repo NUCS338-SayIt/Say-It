@@ -2,6 +2,7 @@ import os
 import requests
 
 import pandas as pd
+import numpy as np
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), '../data/')
 BASE_URL = 'https://api.census.gov/data/2019/pep/population'
@@ -195,7 +196,23 @@ class Covid19(object):
         :param county: str, e.g. 'Cook'
         :return: tuple(date, number)
         """
-        raise NotImplementedError
+        df = self.df_us.copy()
+        if state:
+            df = self.df_states.copy()
+            df = df[df['state'] == state]
+        if state and county:
+            df = self.df_counties.copy()
+            df = df[(df['state'] == state) & (df['county'] == county)]
+
+        max_increase = df.iloc[0]['cases']
+        max_idx = 0
+        for idx in range(1, len(df.index)):
+            increase = df.iloc[idx]['cases'] - df.iloc[idx - 1]['cases']
+            if increase > max_increase:
+                max_increase = increase
+                max_idx = idx
+
+        return df.iloc[max_idx]['date'], max_increase
 
     def highest_cases(self, date, state=None, scale='new'):
         """
@@ -205,7 +222,17 @@ class Covid19(object):
         :param scale: 'new' or 'cumulative'
         :return: str, e.g. 'California' or 'Cook'
         """
-        raise NotImplementedError
+        df = self.df_states.copy()
+        if state:
+            df = self.df_counties.copy()
+            df = df[df['state'] == state]
+        df = df[df['date'] == date]
+
+        idx = df['cases'].idxmax()
+        if state:
+            return df.iloc[idx]['county']
+        else:
+            return df.iloc[idx]['state']
 
     def growth_rate_rank(self, date, span=7, state=None, county=None):
         """
@@ -216,7 +243,24 @@ class Covid19(object):
         :param county: str, e.g. 'Cook'
         :return: int
         """
-        raise NotImplementedError
+        df = self.df_states.copy()
+        if state and county:
+            df = self.df_counties.copy()
+            df = df[df['state'] == state]
+        df = df[df['date'] == date]
+        growth_rate = self.growth_rate(date, state, county, span)
+        rank = 1
+
+        if state and county:
+            for idx in range(len(df.index)):
+                county_rate = self.growth_rate(date, state, df.iloc[idx]['county'], span)
+                if county_rate > growth_rate: rank += 1
+        else:
+            for idx in range(len(df.index)):
+                state_rate =  self.growth_rate(date, df.iloc[idx]['state'], county, span)
+                if state_rate > growth_rate: rank += 1
+
+        return rank
 
     """
     Additional Data needed
