@@ -2,6 +2,7 @@ from analytics.covid19 import Covid19
 
 from string import Template
 import os
+import random
 import locale
 locale.setlocale(locale.LC_ALL, 'en_US')
 
@@ -9,8 +10,36 @@ locale.setlocale(locale.LC_ALL, 'en_US')
 TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), '../template/')
 
 
+transitionWords = {
+    'similarity': ['likewise', 'similarly', 'together with'],
+    'opposition': ['in contrast', 'on the contrary', 'however', 'while']
+}
+
+degreeAdverbs = {
+    '-1': ['slightly', 'gradually', 'marginally', 'slightly'],
+    '0': ['consistently', 'steadily'],
+    '1': ['considerably', 'dramatically', 'enormously', 'remarkably']
+}
+
+
+def load_template(render_type, trend=None):
+    dir = os.path.join(TEMPLATE_DIR, render_type)
+    filename = os.path.join(dir, '{}_{}'.format(render_type, trend)) if trend else os.path.join(dir, render_type)
+    with open(filename, 'r') as f:
+        template_raw = f.read()
+    return Template(template_raw)
+
+
+def random_transition(key):
+    return random.choice(transitionWords[key])
+
+
+def random_degree(key):
+    return random.choice(degreeAdverbs[key])
+
+
 def weekly_report(date, state=None, county=None):
-    with open(os.path.join(TEMPLATE_DIR, 'weekly_report.txt')) as f:
+    with open(os.path.join(TEMPLATE_DIR, 'weekly_report')) as f:
         template_raw = f.read()
     template = Template(template_raw)
 
@@ -47,4 +76,5 @@ def weekly_report(date, state=None, county=None):
 
 
 if __name__ == '__main__':
-    weekly_report('2020-05-03')
+    # weekly_report('2020-05-03')
+    print(load_template('fatality_rate', 'upward').template)
