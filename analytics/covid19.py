@@ -328,7 +328,7 @@ class Covid19(object):
         if type == 'most':
             result = max(zip(cases_per_capita.values(), cases_per_capita.keys()))
         else:
-            non_zeros = {k: v for k, v in cases_per_capita.items() if v != 0.0}
+            non_zeros = {k: v for k, v in cases_per_capita.items() if v > 0.0}
             result = min(zip(non_zeros.values(), non_zeros.keys()))
         return result
 
