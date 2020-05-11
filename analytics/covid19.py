@@ -21,6 +21,29 @@ class Covid19(object):
             self.df_us.shape, self.df_states.shape, self.df_counties.shape)
 
     """
+    Test if the input is valid
+    """
+    def valid_span(self, date, state=None, county=None, span=1):
+        df = self.df_us.copy()
+        if state:
+            df = self.df_states.copy()
+            df = df[df['state'] == state]
+        if state and county:
+            df = self.df_counties.copy()
+            df = df[(df['state'] == state) & (df['county'] == county)]
+        df = df.reset_index(drop=True)
+        idx = pd.Index(df['date']).get_loc(date)
+
+        # 'Error, please input the right date.\n'
+        if idx - 1 <= 0:
+            return False
+        # 'Error. The span is out of the range of dataset.\n'
+        if idx - 2 * span <= 0:
+            return False
+        # Valid
+        return True
+
+    """
     Confirmed cases related
     """
     def confirmed_cases(self, date, state=None, county=None, span=1):
@@ -47,6 +70,9 @@ class Covid19(object):
 
         span_cases = df.iloc[idx]['cases'] - df.iloc[idx - span]['cases'] if idx - span > 0 else df.iloc[idx]['cases']
         total_cases = df.iloc[idx]['cases']
+
+
+
         return span_cases, total_cases
 
     def growth_rate(self, date, state=None, county=None, span=1):
@@ -186,6 +212,7 @@ class Covid19(object):
             return 'increase' if thisweek_death_rate > lastweek_death_rate else 'decrease'
         else:
             return 'Scale should be either day or week.\n'
+
     """
     Rank related
     """
@@ -362,3 +389,6 @@ class Covid19(object):
             return sys.maxsize * 2 + 1
         data = response.json()
         return int(data[1][0])
+
+
+
