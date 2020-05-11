@@ -70,8 +70,8 @@ def report_sequence(date, state=None, county=None, my_span=1):
                                                                              span=my_span, type='least')
     old_least_confirmed = covid.most_confirmed_cases_per_capita(pre_date, state=state, scale=per_capita_scale,
                                                                              span=my_span, type='least')
-    ratio = round(most_confirmed_cases_per_capita[0] / least_confirmed_cases_per_capita[0], 1)
-    old_ratio = round(old_most_confirmed[0] / old_least_confirmed[0], 1)
+    ratio = round(most_confirmed_cases_per_capita / least_confirmed_cases_per_capita, 1)
+    old_ratio = round(old_most_confirmed / old_least_confirmed, 1)
     print('Data Collected')
 
     # Correlation Matrix
