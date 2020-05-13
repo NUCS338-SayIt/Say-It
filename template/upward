@@ -1,0 +1,5 @@
+${attribute} has ${adverb} ticked upward, from about ${previous} in last week to over ${current}.
+${attribute} - ${current}, saw a ${adverb} rise of ${rate} compared to last ${span}.
+${attribute} reached ${current}, up ${rate} from last ${span}.
+${attribute} increased ${rate} and came up to ${current} this ${span}, ${adverb} higher than that of last ${span}.
+${attribute} climbed to ${current}, going up by ${rate}.

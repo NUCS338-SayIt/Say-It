@@ -1,0 +1,2 @@
+${location}'s ${attribute} count reached ${current}.
+${location} recorded ${current} ${attribute} in total.

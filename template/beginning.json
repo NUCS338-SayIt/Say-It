@@ -1,0 +1,14 @@
+{
+  "cumulative confirmed cases": {
+    "upward": ["As of ${date}, ${location} currently has a total of ${current} confirmed cases of COVID-19. With a growth rate of ${rate} comparing with the last ${span}, it is showing a ${trend} trend."],
+    "downward": ["As of ${date}, ${location} currently has a total of ${current} confirmed cases of COVID-19. With a reduction rate of ${rate} comparing with the last ${span}, it is showing a ${trend} trend."]
+  },
+  "cumulative death cases": {
+    "upward": ["${location} has ${current} total death cases of COVID-19 by the end of day of ${date}. Comparing with ${previous} cases on last ${span}, there is a ${rate} increase."],
+    "downward": ["${location} has ${current} total death cases of COVID-19 by the end of day of ${date}. Comparing with ${previous} cases on last ${span}, there is a ${rate} decrease."]
+  },
+  "others": {
+    "upward": ["With a growth rate of ${rate}, the ${attribute} of COVID-19 jumped from ${previous} to ${current} in ${span} in ${location}.", "Previously had ${previous}, the number of ${attribute} in ${location} jumped ${rate} to ${current}."],
+    "downward": ["With a reduction rate of ${rate}, the ${attribute} of COVID-19 jumped from ${previous} to ${current} in ${span} in ${location}.", "Previously had ${previous}, the number of ${attribute} in ${location} jumped ${rate} to ${current}."]
+  }
+}

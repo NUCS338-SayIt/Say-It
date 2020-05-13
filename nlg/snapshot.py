@@ -7,6 +7,7 @@ import locale
 import datetime
 import pandas as pd
 import numpy as np
+import json
 locale.setlocale(locale.LC_ALL, 'en_US')
 
 
@@ -24,13 +25,23 @@ degreeAdverbs = {
     '1': ['considerably', 'dramatically', 'enormously', 'remarkably']
 }
 
+covid = Covid19()
 
-def load_template(render_type, trend=None):
-    dir = os.path.join(TEMPLATE_DIR, render_type)
-    filename = os.path.join(dir, '{}_{}'.format(render_type, trend)) if trend else os.path.join(dir, render_type)
-    with open(filename, 'r') as f:
-        template_raw = f.read()
-    return Template(template_raw)
+
+def load_template(render_type, trend, beginning=False):
+    if not beginning:
+        filename = os.path.join(TEMPLATE_DIR, '{}'.format(trend if trend and 'cumulative' not in render_type else 'cumulative'))
+        with open(filename, 'r') as f:
+            template_raw_list = f.read().splitlines()
+    else:
+        filename = os.path.join(TEMPLATE_DIR, 'beginning.json')
+        with open(filename, 'r') as f:
+            data = json.load(f)
+            if render_type in data:
+                template_raw_list = data[render_type][trend]
+            else:
+                template_raw_list = data['others'][trend]
+    return Template(random.choice(template_raw_list))
 
 
 def random_transition(key):
@@ -40,9 +51,8 @@ def random_transition(key):
 def random_degree(key):
     return random.choice(degreeAdverbs[key])
 
-def report_sequence(date, state=None, county=None, my_span=1):
-    covid = Covid19()
 
+def report_sequence(date, state=None, county=None, my_span=1):
     # if the span and date is valid
     flag = covid.valid_span(date, state=state, county=county, span=my_span)
     if flag == False:
@@ -62,31 +72,33 @@ def report_sequence(date, state=None, county=None, my_span=1):
     death_rate = round(covid.death_rate(date, state=state, county=county, span=my_span)[0] * 100, 1)
     old_death_rate = round(covid.death_rate(pre_date, state=state, county=county, span=my_span)[0] * 100, 1)
     per_capita_scale = 100000
-    most_confirmed_cases_per_capita = covid.most_confirmed_cases_per_capita(date, state=state, scale=per_capita_scale,
-                                                                            span=my_span)
-    old_most_confirmed = covid.most_confirmed_cases_per_capita(pre_date, state=state, scale=per_capita_scale,
-                                                                            span=my_span)
-    least_confirmed_cases_per_capita = covid.most_confirmed_cases_per_capita(date, state=state, scale=per_capita_scale,
-                                                                             span=my_span, type='least')
-    old_least_confirmed = covid.most_confirmed_cases_per_capita(pre_date, state=state, scale=per_capita_scale,
-                                                                             span=my_span, type='least')
-    ratio = round(most_confirmed_cases_per_capita / least_confirmed_cases_per_capita, 1)
-    old_ratio = round(old_most_confirmed / old_least_confirmed, 1)
-    print('Data Collected')
+    # most_confirmed_cases_per_capita = covid.most_confirmed_cases_per_capita(date, state=state, scale=per_capita_scale,
+    #                                                                         span=my_span)
+    # old_most_confirmed = covid.most_confirmed_cases_per_capita(pre_date, state=state, scale=per_capita_scale,
+    #                                                                         span=my_span)
+    # least_confirmed_cases_per_capita = covid.most_confirmed_cases_per_capita(date, state=state, scale=per_capita_scale,
+    #                                                                          span=my_span, type='least')
+    # old_least_confirmed = covid.most_confirmed_cases_per_capita(pre_date, state=state, scale=per_capita_scale,
+    #                                                                          span=my_span, type='least')
+    # ratio = round(most_confirmed_cases_per_capita[0] / least_confirmed_cases_per_capita[0], 1)
+    # old_ratio = round(old_most_confirmed[0] / old_least_confirmed[0], 1)
+    # print('Data Collected')
 
     # Correlation Matrix
-    my_index = ['new confirmed cases', 'cumulative confirmed cases',
-                'new death cases', 'cumulative death cases', 'growth rate', 'death rate',
-                'most confirmed cases per capita', 'least confirmed cases per capita', 'ratio']
-    ar = np.zeros((9,9))
-    corr_df = pd.DataFrame(ar, index = my_index, columns=my_index)
+    my_index = ['newly confirmed cases', 'cumulative confirmed cases',
+                'newly death cases', 'cumulative death cases', 'growth rate', 'fatality rate']
+                # 'most confirmed cases per capita', 'least confirmed cases per capita', 'ratio']
+    # ar = np.zeros((9,9))
+    ar = np.zeros((6, 6))
+    corr_df = pd.DataFrame(ar, index=my_index, columns=my_index)
 
     # Rate calculation
     new_data = [new_confirmed_cases, cumulative_confirmed_cases, new_death_cases, cumulative_death_cases
-                , growth_rate, death_rate, most_confirmed_cases_per_capita, least_confirmed_cases_per_capita,
-                ratio]
+                , growth_rate, death_rate]
+                # most_confirmed_cases_per_capita, least_confirmed_cases_per_capita, ratio]
     old_data = [old_confirmed_cases, oldcumulative_confirmed_cases, old_death_cases, oldcumulative_death_cases
-                , old_growth_rate, old_death_rate, old_most_confirmed, old_least_confirmed, old_ratio]
+                , old_growth_rate, old_death_rate]
+                # old_most_confirmed, old_least_confirmed, old_ratio]
     # Zero division Exception is not handled
     change_rate = list(map(lambda x: (x[0] - x[1]) / x[1], zip(new_data, old_data)))
 
@@ -121,10 +133,145 @@ def report_sequence(date, state=None, county=None, my_span=1):
         previous = temp_index[max_iloc]
         temp_index.remove(previous)
         res_order.append(previous)
-    return sequence, res_order
+    sequence = sorted(sequence, key=lambda x: res_order.index(x['Name']), reverse=True)
+    return sequence
 
 
+def story_beginning(data, date, state, county=None, span=7):
+    attribute, current, previous, rate = data['Name'], data['Current Value'], data['Previous Value'], data['Change Rate']
+    return ""
 
+
+def sentence_generate(data, date, state, county=None, span=7, beginning=False):
+    attribute, current, previous, rate = data['Name'], data['Current Value'], data['Previous Value'], data['Change Rate']
+    template = load_template(attribute, trend='upward' if rate > 0.0 else 'downward', beginning=beginning)
+
+    if isinstance(current, np.int64 or np.int32):
+        current = locale.format_string('%d', current, grouping=True)
+        previous = locale.format_string('%d', previous, grouping=True)
+    elif isinstance(current, float):
+        current = '{}%'.format(int(round(current)))
+        previous = '{}%'.format(int(round(previous)))
+    rate = abs(int(round(rate * 100)))
+
+    spans = {1: 'day', 7: 'week', 30: 'month'}
+
+    if rate >= 5.0:
+        degree = '1'
+    elif rate >= 1.0:
+        degree = '1'
+    else:
+        degree = '0'
+    date = datetime.datetime.strptime(date, '%Y-%m-%d')
+    d = {
+        'date': date.strftime('%A %d %B %Y'),
+        'attribute': attribute,
+        'current': current,
+        'previous': previous,
+        'location': county if county else state,
+        'span': spans[span],
+        'rate': '{}%'.format(rate),
+        'adverb': random_degree(degree)
+    }
+    return template.safe_substitute(d)
+
+
+def ratio_generate(date, state, county=None, span=7):
+    per_capita_scale = 100000
+    most_confirmed_cases_per_capita = covid.most_confirmed_cases_per_capita(date, state=state, scale=per_capita_scale,
+                                                                            span=span)
+    least_confirmed_cases_per_capita = covid.most_confirmed_cases_per_capita(date, state=state, scale=per_capita_scale,
+                                                                             span=span, type='least')
+    ratio = int(round(most_confirmed_cases_per_capita[0] / least_confirmed_cases_per_capita[0], 1))
+    template_raw = 'The coronavirus has spread at a widely different rate and pace from ${type} to ${type} this ${span}. ' \
+                   '${most_confirmed_cases_per_capita} has the highest reported rate of confirmed cases, at nearly ' \
+                   '${most_confirmed_cases} per ${per_capita_scale} residents -- over ${ratio} times the ' \
+                   'rate of the ${type} with the lowest rate.'
+    template = Template(template_raw)
+    spans = {1: 'day', 7: 'week', 30: 'month'}
+    d = {
+        'type': 'county' if state else 'state',
+        'most_confirmed_cases_per_capita': most_confirmed_cases_per_capita[1],
+        'most_confirmed_cases': int(most_confirmed_cases_per_capita[0]),
+        'per_capita_scale': locale.format_string('%d', per_capita_scale, grouping=True),
+        'ratio': ratio,
+        'span': spans[span]
+    }
+
+    return template.safe_substitute(d)
+
+
+def story_ending(date, state, county=None, span=7):
+    if county:
+        highest = covid.highest_cases(date, state=state)
+    else:
+        highest = covid.highest_cases(date)
+    my_rank = covid.growth_rate_rank(date, span=span, state=state, county=county)
+    template_raw = 'Comparing with others, the growth rate of ${location} this ${span} ranked ${rank} among all ${scale1}. ' \
+                   '${highest} has the most confirmed cases in ${scale2}wide.'
+    template = Template(template_raw)
+    spans = {1: 'day', 7: 'week', 30: 'month'}
+    d = {
+        'location': county if county else state,
+        'span': spans[span],
+        'scale1': 'counties' if county else 'states',
+        'scale2': 'state' if county else 'nation',
+        'rank': my_rank,
+        'highest': highest
+    }
+    return template.safe_substitute(d)
+
+
+def capitalize_article(article):
+    def capitalize_para(para):
+        def capitalize_sentence(sentence):
+            if len(sentence) > 1:
+                return sentence[0].capitalize() + sentence[1:]
+            if len(sentence) == 1:
+                return sentence.capitalize()
+            else:
+                return ''
+
+        originals = para.split('.')
+        trimmed = [sentence.strip() for sentence in originals]
+        uppercased = [capitalize_sentence(sentence) for sentence in trimmed]
+        return '. '.join(uppercased)
+
+    originals = article.split('\n')
+    trimmed = [para.strip() for para in originals]
+    uppercased = [capitalize_para(para) for para in trimmed]
+    return '\n'.join(uppercased)
+
+
+def story_generate(date, state, county=None, span=7):
+    sequence = report_sequence(date, state=state, my_span=span)
+
+    # Beginning: Highlight Attribute
+    beginning = sentence_generate(sequence[0], date, state, county, span, beginning=True)
+
+    # Beginning: Second Attribute
+    second_attr = sentence_generate(sequence[1], date, state, county, span)
+
+    first_para = beginning + second_attr
+
+    # 3rd - 6th
+    second_para = ""
+    for i in range(2, 6):
+        sentences = sentence_generate(sequence[i], date, state, county, span)
+        second_para += sentences
+
+    # ratio
+    third_para = ratio_generate(date, state=state, span=span)
+
+    # ending
+    ending = story_ending(date, state, county, span)
+
+    story = "{}\n{}\n{}\n{}\n".format(first_para, second_para, third_para, ending)
+    story = capitalize_article(story)
+    print(story)
+
+    with open('../{}-{}.txt'.format(date, state if state else 'us'), 'a+') as f:
+        f.write(story)
 
 
 def weekly_report(date, state=None, county=None):
@@ -167,4 +314,5 @@ def weekly_report(date, state=None, county=None):
 
 if __name__ == '__main__':
     # weekly_report('2020-05-03')
-    print(load_template('fatality_rate', 'upward').template)
+    # print(load_template('fatality rate', 'upward').template)
+    story_generate('2020-05-11', 'Ohio', span=7)

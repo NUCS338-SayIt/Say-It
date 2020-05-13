@@ -254,6 +254,7 @@ class Covid19(object):
             df = self.df_counties.copy()
             df = df[df['state'] == state]
         df = df[df['date'] == date]
+        df = df.reset_index(drop=True)
 
         idx = df['cases'].idxmax()
         if state:
