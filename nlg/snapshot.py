@@ -144,7 +144,8 @@ def story_beginning(data, date, state, county=None, span=7):
 
 def sentence_generate(data, date, state, county=None, span=7, beginning=False):
     attribute, current, previous, rate = data['Name'], data['Current Value'], data['Previous Value'], data['Change Rate']
-    template = load_template(attribute, trend='upward' if rate > 0.0 else 'downward', beginning=beginning)
+    trend = 'upward' if rate > 0.0 else 'downward'
+    template = load_template(attribute, trend=trend, beginning=beginning)
 
     if isinstance(current, np.int64 or np.int32):
         current = locale.format_string('%d', current, grouping=True)
@@ -170,6 +171,7 @@ def sentence_generate(data, date, state, county=None, span=7, beginning=False):
         'previous': previous,
         'location': county if county else state,
         'span': spans[span],
+        'trend': trend,
         'rate': '{}%'.format(rate),
         'adverb': random_degree(degree)
     }
