@@ -63,17 +63,17 @@ def create_corr_df():
     corr_df.loc['newly confirmed cases']['newly death cases'] = 0.0
     corr_df.loc['newly confirmed cases']['cumulative death cases'] = 0.0
     corr_df.loc['newly confirmed cases']['growth rate'] = 0.0
-    corr_df.loc['newly confirmed cases']['death rate'] = 0.0
+    corr_df.loc['newly confirmed cases']['fatality rate'] = 0.0
     corr_df.loc['cumulative confirmed cases']['newly confirmed cases'] = 0.0
     corr_df.loc['cumulative confirmed cases']['newly death cases'] = 0.0
     corr_df.loc['cumulative confirmed cases']['cumulative death cases'] = 0.0
     corr_df.loc['cumulative confirmed cases']['growth rate'] = 0.0
-    corr_df.loc['cumulative confirmed cases']['death rate'] = 0.0
+    corr_df.loc['cumulative confirmed cases']['fatality rate'] = 0.0
     corr_df.loc['newly death cases']['newly confirmed cases'] = 0.0
     corr_df.loc['newly death cases']['cumulative confirmed cases'] = 0.0
     corr_df.loc['newly death cases']['cumulative death cases'] = 0.0
     corr_df.loc['newly death cases']['growth rate'] = 0.0
-    corr_df.loc['newly death cases']['death rate'] = 0.0
+    corr_df.loc['newly death cases']['fatality rate'] = 0.0
 
     return corr_df
 
