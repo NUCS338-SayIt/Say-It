@@ -51,6 +51,32 @@ def random_transition(key):
 def random_degree(key):
     return random.choice(degreeAdverbs[key])
 
+# Creating the Correlation Matrix
+def create_corr_df():
+    sequence_index = ['new confirmed cases', 'cumulative confirmed cases',
+                      'new death cases', 'cumulative death cases', 'growth rate', 'death rate']
+    ar = np.zeros((6, 6))
+    corr_df = pd.DataFrame(ar, index = sequence_index, columns=sequence_index)
+
+    # corr_df[A][B] is the relation when B is after A.
+    corr_df.loc['new confirmed cases']['cumulative confirmed cases'] = 0.0
+    corr_df.loc['new confirmed cases']['new death cases'] = 0.0
+    corr_df.loc['new confirmed cases']['cumulative death cases'] = 0.0
+    corr_df.loc['new confirmed cases']['growth rate'] = 0.0
+    corr_df.loc['new confirmed cases']['death rate'] = 0.0
+    corr_df.loc['cumulative confirmed cases']['new confirmed cases'] = 0.0
+    corr_df.loc['cumulative confirmed cases']['new death cases'] = 0.0
+    corr_df.loc['cumulative confirmed cases']['cumulative death cases'] = 0.0
+    corr_df.loc['cumulative confirmed cases']['growth rate'] = 0.0
+    corr_df.loc['cumulative confirmed cases']['death rate'] = 0.0
+    corr_df.loc['new death cases']['new confirmed cases'] = 0.0
+    corr_df.loc['new death cases']['cumulative confirmed cases'] = 0.0
+    corr_df.loc['new death cases']['cumulative death cases'] = 0.0
+    corr_df.loc['new death cases']['growth rate'] = 0.0
+    corr_df.loc['new death cases']['death rate'] = 0.0
+
+    return corr_df
+
 
 def report_sequence(date, state=None, county=None, my_span=1):
     # if the span and date is valid
@@ -85,12 +111,11 @@ def report_sequence(date, state=None, county=None, my_span=1):
     # print('Data Collected')
 
     # Correlation Matrix
-    my_index = ['newly confirmed cases', 'cumulative confirmed cases',
-                'newly death cases', 'cumulative death cases', 'growth rate', 'fatality rate']
-                # 'most confirmed cases per capita', 'least confirmed cases per capita', 'ratio']
-    # ar = np.zeros((9,9))
-    ar = np.zeros((6, 6))
-    corr_df = pd.DataFrame(ar, index=my_index, columns=my_index)
+    sequence_index = ['new confirmed cases', 'cumulative confirmed cases',
+                      'new death cases', 'cumulative death cases', 'growth rate', 'death rate']
+
+    # Correlation Matrix
+    corr_df = create_corr_df()
 
     # Rate calculation
     new_data = [new_confirmed_cases, cumulative_confirmed_cases, new_death_cases, cumulative_death_cases
@@ -104,35 +129,48 @@ def report_sequence(date, state=None, county=None, my_span=1):
 
     # Output a list of map with key Names, Current Value, Previous Value, Change Rate
     sequence = []
-    temp_list = map(list, zip(my_index, new_data, old_data, change_rate))
+    temp_list = map(list, zip(sequence_index, new_data, old_data, change_rate))
     for ele in temp_list:
         temp_dict = dict(zip(['Name', 'Current Value', 'Previous Value', 'Change Rate'], ele))
         sequence.append(temp_dict)
 
     # Score of changing rate
-    temp = sorted(change_rate, key=abs, reverse=True)
+    temp = sorted(change_rate[:6], key=abs, reverse=True)
     change_score = []
-    for ele in change_rate:
-        change_score.append(round(temp.index(ele) / 10.0 + 0.1, 1))
+    interval = 1 / len(sequence_index)
+    for ele in change_rate[:6]:
+        change_score.append(round((temp.index(ele) + 1) * interval, 2))
 
-    # Decide the returning order
-    res_order = []
-    temp_index = my_index
-    a1 = my_index[change_score.index(max(change_score))]
-    res_order.append(a1)
-    temp_index.remove(a1)
-    while len(temp_index):
-        previous = a1
-        rest_score = []
-        for ele in temp_index:
-            score1 = change_score[my_index.index(ele)]
-            score2 = corr_df.loc[previous][ele]
-            score = 0.5 * score1 + 0.5 * score2
-            rest_score.append(score)
-        max_iloc = rest_score.index(max(rest_score))
-        previous = temp_index[max_iloc]
-        temp_index.remove(previous)
-        res_order.append(previous)
+        # Choose the first attribute
+        res_order = []
+        temp_index = sequence_index
+        first = sequence_index[change_score.index(max(change_score))]
+        res_order.append(first)
+        temp_index.remove(first)
+
+        # Generate the rest of the sequence order
+        while len(temp_index) > 1:
+            couple1 = ""
+            couple2 = ""
+            max_score = 0.0
+            for ele1 in temp_index:
+                for ele2 in temp_index:
+                    if ele2 == ele1:
+                        continue
+                    current_score = change_score[sequence_index.index(ele1)] \
+                                    + change_score[sequence_index.index(ele2)] \
+                                    + corr_df.loc[ele1][ele2]
+                    if current_score > max_score:
+                        couple1 = ele1
+                        couple2 = ele2
+                        max_score = current_score
+            res_order.append(couple1)
+            res_order.append(couple2)
+            temp_index.remove(couple1)
+            temp_index.remove(couple2)
+        if len(temp_index) > 0:
+            res_order.append(temp_index[0])
+
     sequence = sorted(sequence, key=lambda x: res_order.index(x['Name']), reverse=True)
     return sequence
 
