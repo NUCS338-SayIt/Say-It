@@ -53,10 +53,10 @@ def random_degree(key):
 
 # Creating the Correlation Matrix
 def create_corr_df():
-    sequence_index = ['new confirmed cases', 'cumulative confirmed cases',
+    my_index = ['new confirmed cases', 'cumulative confirmed cases',
                       'new death cases', 'cumulative death cases', 'growth rate', 'death rate']
     ar = np.zeros((6, 6))
-    corr_df = pd.DataFrame(ar, index = sequence_index, columns=sequence_index)
+    corr_df = pd.DataFrame(ar, index = my_index, columns=my_index)
 
     # corr_df[A][B] is the relation when B is after A.
     corr_df.loc['new confirmed cases']['cumulative confirmed cases'] = 0.0
@@ -111,10 +111,6 @@ def report_sequence(date, state=None, county=None, my_span=1):
     # print('Data Collected')
 
     # Correlation Matrix
-    sequence_index = ['new confirmed cases', 'cumulative confirmed cases',
-                      'new death cases', 'cumulative death cases', 'growth rate', 'death rate']
-
-    # Correlation Matrix
     corr_df = create_corr_df()
 
     # Rate calculation
@@ -129,7 +125,7 @@ def report_sequence(date, state=None, county=None, my_span=1):
 
     # Output a list of map with key Names, Current Value, Previous Value, Change Rate
     sequence = []
-    temp_list = map(list, zip(sequence_index, new_data, old_data, change_rate))
+    temp_list = map(list, zip(my_index, new_data, old_data, change_rate))
     for ele in temp_list:
         temp_dict = dict(zip(['Name', 'Current Value', 'Previous Value', 'Change Rate'], ele))
         sequence.append(temp_dict)
@@ -137,14 +133,14 @@ def report_sequence(date, state=None, county=None, my_span=1):
     # Score of changing rate
     temp = sorted(change_rate[:6], key=abs, reverse=True)
     change_score = []
-    interval = 1 / len(sequence_index)
+    interval = 1 / len(my_index)
     for ele in change_rate[:6]:
         change_score.append(round((temp.index(ele) + 1) * interval, 2))
 
         # Choose the first attribute
         res_order = []
-        temp_index = sequence_index
-        first = sequence_index[change_score.index(max(change_score))]
+        temp_index = my_index
+        first = my_index[change_score.index(max(change_score))]
         res_order.append(first)
         temp_index.remove(first)
 
@@ -157,8 +153,8 @@ def report_sequence(date, state=None, county=None, my_span=1):
                 for ele2 in temp_index:
                     if ele2 == ele1:
                         continue
-                    current_score = change_score[sequence_index.index(ele1)] \
-                                    + change_score[sequence_index.index(ele2)] \
+                    current_score = change_score[my_index.index(ele1)] \
+                                    + change_score[my_index.index(ele2)] \
                                     + corr_df.loc[ele1][ele2]
                     if current_score > max_score:
                         couple1 = ele1
