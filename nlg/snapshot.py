@@ -53,27 +53,27 @@ def random_degree(key):
 
 # Creating the Correlation Matrix
 def create_corr_df():
-    my_index = ['new confirmed cases', 'cumulative confirmed cases',
-                      'new death cases', 'cumulative death cases', 'growth rate', 'death rate']
+    my_index = ['newly confirmed cases', 'cumulative confirmed cases',
+                      'newly death cases', 'cumulative death cases', 'growth rate', 'fatality rate']
     ar = np.zeros((6, 6))
-    corr_df = pd.DataFrame(ar, index = my_index, columns=my_index)
+    corr_df = pd.DataFrame(ar, index=my_index, columns=my_index)
 
     # corr_df[A][B] is the relation when B is after A.
-    corr_df.loc['new confirmed cases']['cumulative confirmed cases'] = 0.0
-    corr_df.loc['new confirmed cases']['new death cases'] = 0.0
-    corr_df.loc['new confirmed cases']['cumulative death cases'] = 0.0
-    corr_df.loc['new confirmed cases']['growth rate'] = 0.0
-    corr_df.loc['new confirmed cases']['death rate'] = 0.0
-    corr_df.loc['cumulative confirmed cases']['new confirmed cases'] = 0.0
-    corr_df.loc['cumulative confirmed cases']['new death cases'] = 0.0
+    corr_df.loc['newly confirmed cases']['cumulative confirmed cases'] = 0.0
+    corr_df.loc['newly confirmed cases']['newly death cases'] = 0.0
+    corr_df.loc['newly confirmed cases']['cumulative death cases'] = 0.0
+    corr_df.loc['newly confirmed cases']['growth rate'] = 0.0
+    corr_df.loc['newly confirmed cases']['death rate'] = 0.0
+    corr_df.loc['cumulative confirmed cases']['newly confirmed cases'] = 0.0
+    corr_df.loc['cumulative confirmed cases']['newly death cases'] = 0.0
     corr_df.loc['cumulative confirmed cases']['cumulative death cases'] = 0.0
     corr_df.loc['cumulative confirmed cases']['growth rate'] = 0.0
     corr_df.loc['cumulative confirmed cases']['death rate'] = 0.0
-    corr_df.loc['new death cases']['new confirmed cases'] = 0.0
-    corr_df.loc['new death cases']['cumulative confirmed cases'] = 0.0
-    corr_df.loc['new death cases']['cumulative death cases'] = 0.0
-    corr_df.loc['new death cases']['growth rate'] = 0.0
-    corr_df.loc['new death cases']['death rate'] = 0.0
+    corr_df.loc['newly death cases']['newly confirmed cases'] = 0.0
+    corr_df.loc['newly death cases']['cumulative confirmed cases'] = 0.0
+    corr_df.loc['newly death cases']['cumulative death cases'] = 0.0
+    corr_df.loc['newly death cases']['growth rate'] = 0.0
+    corr_df.loc['newly death cases']['death rate'] = 0.0
 
     return corr_df
 
@@ -84,6 +84,9 @@ def report_sequence(date, state=None, county=None, my_span=1):
     if flag == False:
         print("Error. Date or span is out of range./n")
         return -1
+
+    my_index = ['newly confirmed cases', 'cumulative confirmed cases',
+                'newly death cases', 'cumulative death cases', 'growth rate', 'fatality rate']
 
     #Processing
     today = datetime.datetime.strptime(date, '%Y-%m-%d')
@@ -111,9 +114,11 @@ def report_sequence(date, state=None, county=None, my_span=1):
     # print('Data Collected')
 
     # Correlation Matrix
+
     corr_df = create_corr_df()
 
     # Rate calculation
+
     new_data = [new_confirmed_cases, cumulative_confirmed_cases, new_death_cases, cumulative_death_cases
                 , growth_rate, death_rate]
                 # most_confirmed_cases_per_capita, least_confirmed_cases_per_capita, ratio]
