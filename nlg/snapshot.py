@@ -54,26 +54,14 @@ def random_degree(key):
 # Creating the Correlation Matrix
 def create_corr_df():
     my_index = ['newly confirmed cases', 'cumulative confirmed cases',
-                      'newly death cases', 'cumulative death cases', 'growth rate', 'fatality rate']
+                'newly death cases', 'cumulative death cases', 'growth rate', 'fatality rate']
     ar = np.zeros((6, 6))
     corr_df = pd.DataFrame(ar, index=my_index, columns=my_index)
 
     # corr_df[A][B] is the relation when B is after A.
-    corr_df.loc['newly confirmed cases']['cumulative confirmed cases'] = 0.0
-    corr_df.loc['newly confirmed cases']['newly death cases'] = 0.0
-    corr_df.loc['newly confirmed cases']['cumulative death cases'] = 0.0
-    corr_df.loc['newly confirmed cases']['growth rate'] = 0.0
-    corr_df.loc['newly confirmed cases']['fatality rate'] = 0.0
-    corr_df.loc['cumulative confirmed cases']['newly confirmed cases'] = 0.0
-    corr_df.loc['cumulative confirmed cases']['newly death cases'] = 0.0
-    corr_df.loc['cumulative confirmed cases']['cumulative death cases'] = 0.0
-    corr_df.loc['cumulative confirmed cases']['growth rate'] = 0.0
-    corr_df.loc['cumulative confirmed cases']['fatality rate'] = 0.0
-    corr_df.loc['newly death cases']['newly confirmed cases'] = 0.0
-    corr_df.loc['newly death cases']['cumulative confirmed cases'] = 0.0
-    corr_df.loc['newly death cases']['cumulative death cases'] = 0.0
-    corr_df.loc['newly death cases']['growth rate'] = 0.0
-    corr_df.loc['newly death cases']['fatality rate'] = 0.0
+    corr_df.loc['newly confirmed cases']['growth rate'] = 0.8
+    corr_df.loc['newly death cases']['fatality rate'] = 0.9
+    corr_df.loc['cumulative death cases']['newly death cases'] = 0.5
 
     return corr_df
 
@@ -173,7 +161,7 @@ def report_sequence(date, state=None, county=None, my_span=1):
         res_order.append(temp_index[0])
 
     sequence = sorted(sequence, key=lambda x: res_order.index(x['Name']), reverse=True)
-    return sequence
+    return res_order
 
 
 def story_beginning(data, date, state, county=None, span=7):
@@ -356,4 +344,5 @@ def weekly_report(date, state=None, county=None):
 if __name__ == '__main__':
     # weekly_report('2020-05-03')
     # print(load_template('fatality rate', 'upward').template)
-    story_generate('2020-05-11', 'Ohio', span=7)
+    # story_generate('2020-05-11', 'Ohio', span=7)
+    print(report_sequence('2020-05-11', 'Ohio', my_span=7))
