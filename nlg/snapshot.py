@@ -142,35 +142,35 @@ def report_sequence(date, state=None, county=None, my_span=1):
     for ele in change_rate[:6]:
         change_score.append(round((temp.index(ele) + 1) * interval, 2))
 
-        # Choose the first attribute
-        res_order = []
-        temp_index = my_index
-        first = my_index[change_score.index(max(change_score))]
-        res_order.append(first)
-        temp_index.remove(first)
+    # Choose the first attribute
+    res_order = []
+    temp_index = my_index
+    first = my_index[change_score.index(max(change_score))]
+    res_order.append(first)
+    temp_index.remove(first)
 
-        # Generate the rest of the sequence order
-        while len(temp_index) > 1:
-            couple1 = ""
-            couple2 = ""
-            max_score = 0.0
-            for ele1 in temp_index:
-                for ele2 in temp_index:
-                    if ele2 == ele1:
-                        continue
-                    current_score = change_score[my_index.index(ele1)] \
-                                    + change_score[my_index.index(ele2)] \
-                                    + corr_df.loc[ele1][ele2]
-                    if current_score > max_score:
-                        couple1 = ele1
-                        couple2 = ele2
-                        max_score = current_score
-            res_order.append(couple1)
-            res_order.append(couple2)
-            temp_index.remove(couple1)
-            temp_index.remove(couple2)
-        if len(temp_index) > 0:
-            res_order.append(temp_index[0])
+    # Generate the rest of the sequence order
+    while len(temp_index) > 1:
+        couple1 = ""
+        couple2 = ""
+        max_score = 0.0
+        for ele1 in temp_index:
+            for ele2 in temp_index:
+                if ele2 == ele1:
+                    continue
+                current_score = change_score[my_index.index(ele1)] \
+                                + change_score[my_index.index(ele2)] \
+                                + corr_df.loc[ele1][ele2]
+                if current_score > max_score:
+                    couple1 = ele1
+                    couple2 = ele2
+                    max_score = current_score
+        res_order.append(couple1)
+        res_order.append(couple2)
+        temp_index.remove(couple1)
+        temp_index.remove(couple2)
+    if len(temp_index) > 0:
+        res_order.append(temp_index[0])
 
     sequence = sorted(sequence, key=lambda x: res_order.index(x['Name']), reverse=True)
     return sequence
