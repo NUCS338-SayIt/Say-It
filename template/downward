@@ -2,4 +2,4 @@ ${attribute} has ${adverb} fallen by ${rate} this ${span}, suggesting a downward
 ${attribute} of this ${span} declined to ${current} as compared with ${previous} in last ${span}.
 we saw a ${adverb} reduction in ${attribute} this ${span}, from previous ${previous} to ${current}.
 this ${span} ${attribute} was reported to be ${current}, from which a ${adverb} decrease of ${rate} could be observed compared to last ${span}.
-Based on the latest statistics on ${attribute}, we could notice a drop by ${rate} from last ${span}'s ${previous}.
+based on the latest statistics on ${attribute}, we could notice a drop by ${rate} from last ${span}'s ${previous}.

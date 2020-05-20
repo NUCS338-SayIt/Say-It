@@ -15,8 +15,10 @@ TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), '../template/')
 
 
 transitionWords = {
-    'similarity': ['likewise', 'similarly', 'together with'],
-    'opposition': ['in contrast', 'on the contrary', 'however', 'while']
+    'similarity': ['likewise', 'similarly', 'together with', 'in addition', 'additionally',
+                   'moreover', 'furthermore'],
+    'opposition': ['in contrast', 'on the contrary', 'however', 'while', 'nevertheless',
+                   'nonetheless', 'on the other hand']
 }
 
 degreeAdverbs = {
@@ -28,12 +30,8 @@ degreeAdverbs = {
 covid = Covid19()
 
 
-def load_template(render_type, trend, beginning=False):
-    if not beginning:
-        filename = os.path.join(TEMPLATE_DIR, '{}'.format(trend if trend and 'cumulative' not in render_type else 'cumulative'))
-        with open(filename, 'r') as f:
-            template_raw_list = f.read().splitlines()
-    else:
+def load_template(render_type, trend, beginning=False, explanation=False):
+    if beginning:
         filename = os.path.join(TEMPLATE_DIR, 'beginning.json')
         with open(filename, 'r') as f:
             data = json.load(f)
@@ -41,6 +39,15 @@ def load_template(render_type, trend, beginning=False):
                 template_raw_list = data[render_type][trend]
             else:
                 template_raw_list = data['others'][trend]
+    elif explanation:
+        filename = os.path.join(TEMPLATE_DIR, 'explanation.json')
+        with open(filename, 'r') as f:
+            data = json.load(f)
+            template_raw_list = data[trend]
+    else:
+        filename = os.path.join(TEMPLATE_DIR, '{}'.format(trend if trend and 'cumulative' not in render_type else 'cumulative'))
+        with open(filename, 'r') as f:
+            template_raw_list = f.read().splitlines()
     return Template(random.choice(template_raw_list))
 
 
@@ -205,6 +212,30 @@ def sentence_generate(data, date, state, county=None, span=7, beginning=False):
     return template.safe_substitute(d)
 
 
+def couple_generate(couple, date, state, county=None, span=7):
+    data1, data2 = couple
+    attribute1, attribute2 = data1['Name'], data2['Name']
+    rate1, rate2 = data1['Change Rate'], data2['Change Rate']
+
+    sent1 = sentence_generate(data1, date, state, county=county, span=span)
+    sent2 = sentence_generate(data2, date, state, county=county, span=span)
+
+    if rate1 * rate2 > 0.0:
+        trans_word = random_transition('similarity')
+    else:
+        trans_word = random_transition('opposition')
+
+    if rate1 < 0.0 and rate2 < 0.0:
+        explanation = load_template('', 'downward', explanation=True)
+    elif rate1 > 0.0 and rate2 > 0.0:
+        explanation = load_template('', 'upward', explanation=True)
+    else:
+        explanation = ''
+
+    para = '{}{},{}{}'.format(sent1, trans_word, sent2, explanation)
+    return para
+
+
 def ratio_generate(date, state, county=None, span=7):
     per_capita_scale = 100000
     most_confirmed_cases_per_capita = covid.most_confirmed_cases_per_capita(date, state=state, scale=per_capita_scale,
@@ -277,17 +308,14 @@ def story_generate(date, state, county=None, span=7):
 
     # Beginning: Highlight Attribute
     beginning = sentence_generate(sequence[0], date, state, county, span, beginning=True)
+    first_para = beginning
 
-    # Beginning: Second Attribute
-    second_attr = sentence_generate(sequence[1], date, state, county, span)
-
-    first_para = beginning + second_attr
-
-    # 3rd - 6th
+    # Second paragraph: 2nd - 3rd + 4th - 5th + 6th
     second_para = ""
-    for i in range(2, 6):
-        sentences = sentence_generate(sequence[i], date, state, county, span)
-        second_para += sentences
+    couple1 = couple_generate((sequence[1], sequence[2]), date, state, county=county, span=span)
+    couple2 = couple_generate((sequence[3], sequence[4]), date, state, county=county, span=span)
+    single = sentence_generate(sequence[5], date, state, county=county, span=span)
+    second_para = couple1 + couple2 + single
 
     # ratio
     third_para = ratio_generate(date, state=state, span=span)
@@ -344,5 +372,5 @@ def weekly_report(date, state=None, county=None):
 if __name__ == '__main__':
     # weekly_report('2020-05-03')
     # print(load_template('fatality rate', 'upward').template)
-    # story_generate('2020-05-11', 'Ohio', span=7)
-    print(report_sequence('2020-05-11', 'Ohio', my_span=7))
+    story_generate('2020-05-18', 'Illinois', span=7)
+    # print(report_sequence('2020-05-11', 'Ohio', my_span=7))
