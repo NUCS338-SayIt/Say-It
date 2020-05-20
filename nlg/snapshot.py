@@ -235,9 +235,9 @@ def couple_generate(couple, date, state, county=None, span=7):
         trans_word = random_transition('opposition')
 
     if rate1 < 0.0 and rate2 < 0.0:
-        explanation = load_template('', 'downward', explanation=True)
+        explanation = load_template('', 'downward', explanation=True).template
     elif rate1 > 0.0 and rate2 > 0.0:
-        explanation = load_template('', 'upward', explanation=True)
+        explanation = load_template('', 'upward', explanation=True).template
     else:
         explanation = ''
 
@@ -381,5 +381,5 @@ def weekly_report(date, state=None, county=None):
 if __name__ == '__main__':
     # weekly_report('2020-05-03')
     # print(load_template('fatality rate', 'upward').template)
-    story_generate('2020-05-17', 'Illinois', span=7)
+    story_generate('2020-05-18', 'California', span=7)
     # print(report_sequence('2020-05-11', 'Ohio', my_span=7))
