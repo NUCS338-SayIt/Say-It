@@ -60,8 +60,17 @@ def create_corr_df():
 
     # corr_df[A][B] is the relation when B is after A.
     corr_df.loc['newly confirmed cases']['growth rate'] = 0.8
-    corr_df.loc['newly death cases']['fatality rate'] = 0.9
-    corr_df.loc['cumulative death cases']['newly death cases'] = 0.5
+    corr_df.loc['newly confirmed cases']['cumulative confirmed cases'] = 0.6
+    corr_df.loc['newly confirmed cases']['newly death cases'] = 0.4
+    corr_df.loc['cumulative confirmed cases']['growth rate'] = 0.6
+    corr_df.loc['cumulative confirmed cases']['cumulative death cases'] = 0.4
+    corr_df.loc['newly death cases']['fatality rate'] = 0.8
+    corr_df.loc['newly death cases']['cumulative death cases'] = 0.6
+    corr_df.loc['newly death cases']['newly confirmed cases'] = 0.4
+    corr_df.loc['cumulative death cases']['fatality rate'] = 0.6
+    corr_df.loc['cumulative death cases']['cumulative confirmed cases'] = 0.4
+    corr_df.loc['growth rate']['fatality rate'] = 0.2
+    corr_df.loc['fatality rate']['growth rate'] = 0.2
 
     return corr_df
 
@@ -148,7 +157,7 @@ def report_sequence(date, state=None, county=None, my_span=1):
                     continue
                 current_score = change_score[my_index.index(ele1)] \
                                 + change_score[my_index.index(ele2)] \
-                                + corr_df.loc[ele1][ele2]
+                                + 0.8 * corr_df.loc[ele1][ele2]
                 if current_score > max_score:
                     couple1 = ele1
                     couple2 = ele2
