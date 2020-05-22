@@ -203,7 +203,7 @@ def sentence_generate(data, date, state, county=None, span=7, beginning=False):
     if rate >= 5.0:
         degree = '1'
     elif rate >= 1.0:
-        degree = '1'
+        degree = '-1'
     else:
         degree = '0'
     date = datetime.datetime.strptime(date, '%Y-%m-%d')
