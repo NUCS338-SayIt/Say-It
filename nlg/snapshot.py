@@ -12,6 +12,7 @@ locale.setlocale(locale.LC_ALL, 'en_US')
 
 
 TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), '../template/')
+# TEMPLATE_DIR = r'C:\Users\86139\Desktop\西北大学\CS338\Project\Say-It\template'
 
 
 transitionWords = {

@@ -6,6 +6,7 @@ import numpy as np
 import datetime
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), '../data/')
+# DATA_DIR = r'C:\Users\86139\Desktop\西北大学\CS338\Project\Say-It\analytics\data'
 BASE_URL = 'https://api.census.gov/data/2019/pep/population'
 API_KEY = 'ff51fda390a45a5085af02b99725c2963edf7931'
 
