@@ -3,6 +3,7 @@ import requests
 
 import pandas as pd
 import numpy as np
+import datetime
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), '../data/')
 BASE_URL = 'https://api.census.gov/data/2019/pep/population'
@@ -289,6 +290,48 @@ class Covid19(object):
                 if state_rate > growth_rate: rank += 1
 
         return rank
+
+    def rank_among_peers(self, date, attribute, state, county=None, scale='cumulative'):
+        """
+        Get rank among peers. If rank <= 10, return at most two peer in front of it, otherwise return top 2.
+        :param date: str, e.g. '2020-04-23'
+        :param attribute: str, e.g. 'cases' or 'deaths'
+        :param state: str, e.g. 'Illinois'
+        :param county: str, e.g. 'Cook'
+        :param scale: str, 'new' or 'cumulative'
+        :return: dict, e.g. {'rank': 1, 'aboves': ['Illinois', 'California']}
+        """
+        df = self.df_states.copy()
+        if county:
+            df = self.df_counties.copy()
+            df = df[df['state'] == state]
+
+        ranks = []
+        if scale == 'cumulative':
+            df = df[df['date'] == date]
+            df.sort_values(by=[attribute], inplace=True, ascending=False)
+            ranks = df['county'].to_list() if county else df['state'].to_list()
+        elif scale == 'new':
+            peers = df['county'].unique() if county else df['state'].unique()
+
+            today = datetime.datetime.strptime(date, '%Y-%m-%d')
+            yesterday = (today - datetime.timedelta(days=1)).strftime('%Y-%m-%d')
+            today = date
+
+            data_list = []
+            for peer in peers:
+                data_today = df[(df['date'] == today) & (df['county'] == peer)] if county else df[(df['date'] == today) & (df['state'] == peer)]
+                data_yesterday = df[(df['date'] == yesterday) & (df['county'] == peer)] if county else df[(df['date'] == yesterday) & (df['state'] == peer)]
+
+                newly = data_today.iloc[0][attribute] - data_yesterday.iloc[0][attribute] if not data_yesterday.empty else 0  # no newly case
+                data_list.append((peer, newly))
+            data_list = sorted(data_list, key=lambda x: x[1], reverse=True)
+            ranks = [peer for peer, newly in data_list]
+
+        rank = ranks.index(county if county else state)
+        aboves = ranks[rank - 2 if rank >= 2 else 0: rank] if rank < 10 else ranks[0: 2]
+
+        return {'rank': rank + 1, 'aboves': aboves}
 
     """
     Additional Data needed
