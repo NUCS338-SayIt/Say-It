@@ -1,6 +1,7 @@
 import os
 import requests
 
+from statsmodels.tsa.stattools import adfuller as ADF
 import pandas as pd
 import numpy as np
 import datetime
@@ -72,9 +73,6 @@ class Covid19(object):
 
         span_cases = df.iloc[idx]['cases'] - df.iloc[idx - span]['cases'] if idx - span > 0 else df.iloc[idx]['cases']
         total_cases = df.iloc[idx]['cases']
-
-
-
         return span_cases, total_cases
 
     def growth_rate(self, date, state=None, county=None, span=1):
@@ -115,7 +113,6 @@ class Covid19(object):
         prev_date = prev_dt.strftime('%Y-%m-%d')
 
         return 'increase' if self.confirmed_cases(date, state, county, span) > self.confirmed_cases(prev_date, state, county, span) else 'decrease'
-
 
     """
         Death cases related
@@ -303,9 +300,10 @@ class Covid19(object):
         :return: dict, e.g. {'rank': 1, 'aboves': ['Illinois', 'California']}
         """
         df = self.df_states.copy()
+        df = df[df['state'] == state]
         if county:
             df = self.df_counties.copy()
-            df = df[df['state'] == state]
+            df = df[(df['state'] == state) & (df['county'] == county)]
 
         ranks = []
         if scale == 'cumulative':
@@ -333,6 +331,65 @@ class Covid19(object):
         aboves = ranks[rank - 2 if rank >= 2 else 0: rank] if rank < 10 else ranks[0: 2]
 
         return {'rank': rank + 1, 'aboves': aboves}
+
+    def trend_description(self, date, attribute, state, county=None, scale='cumulative'):
+        """
+        Describe the trend
+        :param date: str, e.g. '2020-04-23'
+        :param attribute: str, e.g. 'cases' or 'deaths'
+        :param state: str, e.g. 'Illinois'
+        :param county: str, e.g. 'Cook'
+        :param scale: str, 'new' or 'cumulative'
+        :return: str, e.g. 'rising', 'descending'
+        """
+
+        df = self.df_states.copy()
+        df = df[df['state'] == state]
+        if county:
+            df = self.df_counties.copy()
+            df = df[(df['state'] == state) & (df['county'] == county)]
+        df = df.set_index(df['date']).truncate(after=date)
+
+        input_data = np.array(df[attribute])
+        if scale == 'new':
+            df['new'] = df[attribute].shift(-1) - df[attribute]
+            df['new'] = df['new'].shift(-1)
+            input_data = np.array(df['new'][:-2].values)
+
+        n = input_data.shape[0]
+        sum_sgn = 0
+        for i in np.arange(n):
+            if i <= (n - 1):
+                for j in np.arange(i + 1, n):
+                    if input_data[j] > input_data[i]:
+                        sum_sgn = sum_sgn + 1
+                    elif input_data[j] < input_data[i]:
+                        sum_sgn = sum_sgn - 1
+                    else:
+                        sum_sgn = sum_sgn
+        if n <= 10:
+            z_value = sum_sgn / (n * (n - 1) / 2)
+        else:
+            if sum_sgn > 0:
+                z_value = (sum_sgn - 1) / np.sqrt(n * (n - 1) * (2 * n + 5) / 18)
+            elif sum_sgn == 0:
+                z_value = 0
+            else:
+                z_value = (sum_sgn + 1) / np.sqrt(n * (n - 1) * (2 * n + 5) / 18)
+        ADF_result = ADF(input_data, 0)
+        # 99% ——> +—2.576
+        # 95% ——> +—1.96
+        # 90% ——> +—1.645
+        if ADF_result[1] < 0.01:
+            result = 'remaining relatively stable'
+        else:
+            if 1.96 < np.abs(z_value) <= 2.576:
+                result = 'rising' if z_value > 0 else 'descending'
+            elif np.abs(z_value) > 2.576:
+                result = 'significantly rising' if z_value > 0 else 'significantly descending'
+            else:
+                result = 'fluctuating'
+        return result
 
     """
     Additional Data needed
