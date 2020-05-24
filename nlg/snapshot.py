@@ -292,6 +292,13 @@ def story_ending(date, state, county=None, span=7):
     return template.safe_substitute(d)
 
 
+def ending_generate(date, state, county=None):
+    if county:
+        raise NotImplementedError
+    else:
+
+
+
 def capitalize_article(article):
     def capitalize_para(para):
         def capitalize_sentence(sentence):
