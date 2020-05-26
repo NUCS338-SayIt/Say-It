@@ -1,14 +1,25 @@
 {
-  "cumulative confirmed cases": {
-    "upward": ["As of ${date}, ${location} currently has a total of ${current} confirmed cases of COVID-19. With a growth rate of ${rate} comparing with the last ${span}, it is showing a ${trend} trend."],
-    "downward": ["As of ${date}, ${location} currently has a total of ${current} confirmed cases of COVID-19. With a reduction rate of ${rate} comparing with the last ${span}, it is showing a ${trend} trend."]
+  "cases": {
+    "top1": ["${location} reported an additional ${newly_cases} cases of the novel coronavirus on ${date} for a total of ${total_cases} ${scale}wide. The ${scale} ranked ${total_cases_rank} in the ${larger_scale} for its number of COVID-19 cases, according to tracking data provided online.",
+      "For ${location}, the total COVID-19 cases increased ${increase_ratio} from ${previous_total_cases} the day before to ${total_cases} on ${date}. The ${scale} ranked ${total_cases_rank} in the ${larger_scale} for its number of COVID-19 cases"],
+    "top3": ["${location} reported an additional ${newly_cases} cases of the novel coronavirus on ${date} for a total of ${total_cases} ${scale}wide. The ${scale} ranked ${total_cases_rank} in the ${larger_scale} for its number of COVID-19 cases --- behind ${above3}, according to tracking data provided online.",
+      "For ${location}, the total COVID-19 cases increased ${increase_ratio} from ${previous_total_cases} the day before to ${total_cases} on ${date}. The ${scale} ranked ${total_cases_rank} in the ${larger_scale} for its number of COVID-19 cases, following ${above3}.",
+      "${location} reported ${newly_cases} new confirmed cases of COVID-19, bringing the total confirmed cases to ${total_cases}. The ${scale} is ranked ${total_cases_rank} in the ${larger_scale}, with ${diff_between_top} less cases than ${top} with leading cases for COVID-19 ${larger_scale}wide."],
+    "others": [
+      "${location} reported an additional ${newly_cases} cases of the novel coronavirus on ${date} for a total of ${total_cases} ${scale}wide. The ${scale} ranked ${total_cases_rank} in the ${larger_scale} for its number of COVID-19 cases --- behind ${above1}, ${above2} and ${above3}, according to tracking data provided online.",
+      "For ${location}, the total COVID-19 cases increased ${increase_ratio} from ${previous_total_cases} the day before to ${total_cases} on ${date}. The ${scale} ranked ${total_cases_rank} in the ${larger_scale} for its number of COVID-19 cases, following ${above1}, ${above2} and ${above3}.",
+      "${location} reported ${newly_cases} new confirmed cases of COVID-19, bringing the total confirmed cases to ${total_cases}. The ${scale} is ranked ${total_cases_rank} in the ${larger_scale}, with ${diff_between_top} less cases than ${top} with leading cases for COVID-19 ${larger_scale}wide.",
+      "${location} reported ${newly_cases} new coronavirus cases, according to a trusted data source. As of ${date}, the ${scale} now has a total of ${total_cases} cases of coronavirus, ranked ${total_cases_rank} in the ${larger_scale} following ${above2} with ${above2_total_cases} cases and ${above3} with ${above3_total_cases}."
+    ]
   },
-  "cumulative death cases": {
-    "upward": ["${location} has ${current} total death cases of COVID-19 by the end of day of ${date}. Comparing with ${previous} cases on last ${span}, there is a ${rate} increase."],
-    "downward": ["${location} has ${current} total death cases of COVID-19 by the end of day of ${date}. Comparing with ${previous} cases on last ${span}, there is a ${rate} decrease."]
-  },
-  "others": {
-    "upward": ["With a growth rate of ${rate}, the ${attribute} of COVID-19 jumped from ${previous} to ${current} in ${span} in ${location}.", "Previously had ${previous}, the number of ${attribute} in ${location} jumped ${rate} to ${current}."],
-    "downward": ["With a reduction rate of ${rate}, the ${attribute} of COVID-19 jumped from ${previous} to ${current} in ${span} in ${location}.", "Previously had ${previous}, the number of ${attribute} in ${location} jumped ${rate} to ${current}."]
+  "deaths": {
+    "top1": ["${location} reported an additional ${newly_cases} death tied to the novel coronavirus on ${date} for a total of ${total_cases} ${scale}wide. The ${scale} ranked ${total_cases_rank} in the nation for its number of COVID-19 related death cases, according to tracking data provided online.",
+      "Health department reported a total of ${newly_cases} new COVID-19 fatalities on ${date} in ${location}. That brings the total number of COVID-19 fatalities across the ${scale} to ${total_cases}. It is currently ranked ${total_cases_rank} in the ${larger_scale}."],
+    "top3": ["${location} reported an additional ${newly_cases} death tied to the novel coronavirus on ${date} for a total of ${total_cases} ${scale}wide. The ${scale} ranked ${total_cases_rank} in the nation for its number of COVID-19 related death cases --- behind ${above3}, according to tracking data provided online.",
+      "Health department reported a total of ${newly_cases} new COVID-19 fatalities on ${date} in ${location}. That brings the total number of COVID-19 fatalities across the ${scale} to ${total_cases}. It is currently ranked ${total_cases_rank} in the ${larger_scale}, following ${above3}.",
+      "Since the pandemic, ${location} has had ${total_cases} death cases for COVID-19. Ranked ${total_cases_rank} in the ${larger_scale} for its number of COVID-19 death cases, it has ${diff_between_top} less death cases than ${top}, the leading ${scale} for death cases."],
+    "others": ["${location} reported an additional ${newly_cases} death tied to the novel coronavirus on ${date} for a total of ${total_cases} ${scale}wide. The ${scale} ranked ${total_cases_rank} in the nation for its number of COVID-19 related death cases --- behind ${above1}, ${above2} and ${above3}, according to tracking data provided online.",
+      "Health department reported a total of ${newly_cases} new COVID-19 fatalities on ${date} in ${location}. That brings the total number of COVID-19 fatalities across the ${scale} to ${total_cases}. It is currently ranked ${total_cases_rank} in the ${larger_scale}, following ${above2} and ${above3}.",
+      "Since the pandemic, ${location} has had ${total_cases} death cases for COVID-19. Ranked ${total_cases_rank} in the ${larger_scale} for its number of COVID-19 death cases, it has ${diff_between_top} less death cases than ${top}, the leading ${scale} for death cases."]
   }
 }

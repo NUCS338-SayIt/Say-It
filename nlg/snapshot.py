@@ -16,10 +16,10 @@ TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), '../template/')
 
 
 transitionWords = {
-    'similarity': ['likewise', 'similarly', 'together with', 'in addition', 'additionally',
+    'similarity': ['likewise', 'similarly', 'together with',
                    'moreover', 'furthermore'],
     'opposition': ['in contrast', 'on the contrary', 'however', 'while', 'nevertheless',
-                   'nonetheless', 'on the other hand']
+                   'nonetheless']
 }
 
 degreeAdverbs = {
@@ -31,20 +31,26 @@ degreeAdverbs = {
 covid = Covid19()
 
 
-def load_template(render_type, trend, beginning=False, explanation=False):
+def load_template(render_type, trend=None, beginning=False, explanation=False, ending=False):
     if beginning:
         filename = os.path.join(TEMPLATE_DIR, 'beginning.json')
         with open(filename, 'r') as f:
             data = json.load(f)
-            if render_type in data:
-                template_raw_list = data[render_type][trend]
-            else:
-                template_raw_list = data['others'][trend]
+            # if render_type in data:
+            #     template_raw_list = data[render_type][trend]
+            # else:
+            #     template_raw_list = data['others'][trend]
+            template_raw_list = data[render_type][trend]
     elif explanation:
         filename = os.path.join(TEMPLATE_DIR, 'explanation.json')
         with open(filename, 'r') as f:
             data = json.load(f)
             template_raw_list = data[trend]
+    elif ending:
+        filename = os.path.join(TEMPLATE_DIR, 'ending.json')
+        with open(filename, 'r') as f:
+            data = json.load(f)
+            template_raw_list = data[render_type]
     else:
         filename = os.path.join(TEMPLATE_DIR, '{}'.format(trend if trend and 'cumulative' not in render_type else 'cumulative'))
         with open(filename, 'r') as f:
@@ -150,9 +156,9 @@ def report_sequence(date, state=None, county=None, my_span=1):
     # Choose the first attribute
     res_order = []
     temp_index = my_index
-    first = my_index[change_score.index(max(change_score))]
-    res_order.append(first)
-    temp_index.remove(first)
+    # first = my_index[change_score.index(max(change_score))]
+    # res_order.append(first)
+    # temp_index.remove(first)
 
     # Generate the rest of the sequence order
     while len(temp_index) > 1:
@@ -181,11 +187,6 @@ def report_sequence(date, state=None, county=None, my_span=1):
     return sequence
 
 
-def story_beginning(data, date, state, county=None, span=7):
-    attribute, current, previous, rate = data['Name'], data['Current Value'], data['Previous Value'], data['Change Rate']
-    return ""
-
-
 def sentence_generate(data, date, state, county=None, span=7, beginning=False):
     attribute, current, previous, rate = data['Name'], data['Current Value'], data['Previous Value'], data['Change Rate']
     trend = 'upward' if rate > 0.0 else 'downward'
@@ -195,9 +196,12 @@ def sentence_generate(data, date, state, county=None, span=7, beginning=False):
         current = locale.format_string('%d', current, grouping=True)
         previous = locale.format_string('%d', previous, grouping=True)
     elif isinstance(current, float):
-        current = '{}%'.format(int(round(current)))
-        previous = '{}%'.format(int(round(previous)))
-    rate = abs(int(round(rate * 100)))
+        # current = '{}%'.format(int(round(current)))
+        # previous = '{}%'.format(int(round(previous)))
+        current = '{}%'.format(round(current, 1))
+        previous = '{}%'.format(round(previous, 1))
+    # rate = abs(int(round(rate * 100)))
+    rate = abs(round(rate * 100, 1))
 
     spans = {1: 'day', 7: 'week', 30: 'month'}
 
@@ -242,7 +246,7 @@ def couple_generate(couple, date, state, county=None, span=7):
     else:
         explanation = ''
 
-    para = '{}{},{}{}'.format(sent1, trans_word, sent2, explanation)
+    para = '{}{}, {}{}'.format(sent1, trans_word, sent2, explanation)
     return para
 
 
@@ -292,11 +296,146 @@ def story_ending(date, state, county=None, span=7):
     return template.safe_substitute(d)
 
 
-def ending_generate(date, state, county=None):
-    if county:
-        raise NotImplementedError
-    else:
+def get_last_day_week(date, delta=1):
+    today = datetime.datetime.strptime(date, '%Y-%m-%d')
+    yesterday = (today - datetime.timedelta(days=delta)).strftime('%Y-%m-%d')
+    return yesterday
 
+
+def num_format(number):
+    return locale.format_string('%d', number, grouping=True)
+
+
+def beginning_generate(date, state, county=None, attribute='cases'):
+    scale_dict = {
+        'scale': 'county' if county else 'state',
+        'larger_scale': 'state' if county else 'nation'
+    }
+    yesterday = get_last_day_week(date, 1)
+
+    if attribute == 'cases':
+        newly_cases, total_cases = covid.confirmed_cases(date, state=state, county=county, span=1)
+        _, previous_total_cases = covid.confirmed_cases(yesterday, state=state, county=county, span=1)
+    else:
+        newly_cases, total_cases = covid.death_cases(date, state=state, county=county, span=1)
+        _, previous_total_cases = covid.death_cases(yesterday, state=state, county=county, span=1)
+    increase_ratio = int(round((total_cases - previous_total_cases) * 1.0 / previous_total_cases, 0))
+
+    rank_data = covid.rank_among_peers(date, attribute, state, county=county, scale='cumulative')
+    rank = rank_data['rank']
+    aboves, tops = rank_data['aboves'], rank_data['tops']
+
+    above1, above1_total_cases = aboves[0]
+    above2, above2_total_cases = aboves[1]
+    above3, above3_total_cases = aboves[2]
+
+    top, top_total_cases = tops[0]
+    diff_between_top = top_total_cases - total_cases
+
+    date = datetime.datetime.strptime(date, '%Y-%m-%d')
+    d = {
+        'date': date.strftime('%A %d %B %Y'),
+        'location': county if county else state,
+        'newly_cases': num_format(newly_cases),
+        'total_cases': num_format(total_cases),
+        'previous_total_cases': num_format(previous_total_cases),
+        'increase_ratio': increase_ratio,
+        'scale': scale_dict['scale'],
+        'larger_scale': scale_dict['larger_scale'],
+        'total_cases_rank': rank,
+        'top': top,
+        'diff_between_top': num_format(diff_between_top),
+        'above1': above1,
+        'above2': above2,
+        'above3': above3,
+        'above2_total_cases': num_format(above2_total_cases),
+        'above3_total_cases': num_format(above3_total_cases)
+    }
+
+    if rank == 1:
+        section = 'top1'
+    elif rank <= 3:
+        section = 'top3'
+    else:
+        section = 'others'
+
+    beginning_raw = load_template(attribute, section, beginning=True)
+    beginning = beginning_raw.safe_substitute(d)
+
+    return beginning
+
+
+def ending_generate(date, state, county=None, attribute='cases'):
+    if county:
+        state_newly_cases, state_total_cases = covid.confirmed_cases(date, state=state, span=1)
+        state_newly_deaths, state_total_deaths = covid.death_cases(date, state=state, span=1)
+        state_rank_cases = covid.rank_among_peers(date, 'cases', state)['rank']
+        state_rank_deaths = covid.rank_among_peers(date, 'deaths', state)['rank']
+
+        coin = random.getrandbits(1)
+        if coin == 0:
+            date = datetime.datetime.strptime(date, '%Y-%m-%d')
+            d = {
+                'date': date.strftime('%A %d %B %Y'),
+                'state': state,
+                'state_newly_cases': num_format(state_newly_cases),
+                'state_total_cases': num_format(state_total_cases),
+                'state_newly_deaths': num_format(state_newly_deaths),
+                'state_total_deaths': num_format(state_total_deaths),
+                'state_rank_cases': state_rank_cases,
+                'state_rank_deaths': state_rank_deaths
+            }
+
+            ending_raw = load_template('county_to_state', ending=True)
+            ending = ending_raw.safe_substitute(d)
+        else:
+            ending_raw = 'Finally, at the state level, {} currently ranks {} in the nation for its number of ' \
+                         'COVID-19 cases and {} for deaths.'.format(state, state_rank_cases, state_rank_deaths)
+            ending = ending_raw + beginning_generate(date, state, attribute=attribute)
+    else:
+        transition_raw = load_template('transition_sentence', ending=True)
+
+        main_raw = load_template('main', ending=True)
+        main_data = covid.ending_main(date, state, attribute=attribute)
+
+        county1, county1_new = main_data['county1'], main_data['county1_new']
+        county2, county2_new = main_data['county2'], main_data['county2_new']
+        county3, county3_new = main_data['county3'], main_data['county3_new']
+        total = main_data['total']
+
+        county1_ratio = int(round(county1_new * 100.0 / total, 0))
+        diff_12 = county1_new - county2_new
+        county2_previous_rank = covid.rank_among_peers(get_last_day_week(date, 1), attribute, state, county=county2, scale='new')['rank']
+
+        date = datetime.datetime.strptime(date, '%Y-%m-%d')
+        attribute_dict = {
+            'cases': 'newly confirmed cases',
+            'deaths': 'newly fatality cases'
+        }
+
+        d = {
+            'date': date.strftime('%A %d %B %Y'),
+            'type': attribute_dict[attribute],
+            'state': state,
+            'county1': county1,
+            'county1_new': num_format(county1_new),
+            'county1_ratio': county1_ratio,
+            'county2': county2,
+            'county2_new': num_format(county2_new),
+            'diff_12': num_format(diff_12),
+            'county2_previous_rank': county2_previous_rank,
+            'county3': county3,
+            'county3_new': num_format(county3_new)
+        }
+
+        transition_sent = transition_raw.safe_substitute(d)
+        main = main_raw.safe_substitute(d)
+
+        conclusion_raw = load_template('conclusion', ending=True)
+        conclusion = conclusion_raw.safe_substitute(d)
+
+        ending = transition_sent + main + conclusion
+    return ending
 
 
 def capitalize_article(article):
@@ -323,28 +462,30 @@ def capitalize_article(article):
 def story_generate(date, state, county=None, span=7):
     sequence = report_sequence(date, state=state, my_span=span)
 
-    # Beginning: Highlight Attribute
-    beginning = sentence_generate(sequence[0], date, state, county, span, beginning=True)
-    first_para = beginning
+    # Beginning
+    # beginning = sentence_generate(sequence[0], date, state, county, span, beginning=True)
+    beginning = beginning_generate(date, state, county=county, attribute=random.choice(['cases', 'deaths']))
 
-    # Second paragraph: 2nd - 3rd + 4th - 5th + 6th
+    # Second paragraph: 1,2 + 3,4 + 5,6
     second_para = ""
-    couple1 = couple_generate((sequence[1], sequence[2]), date, state, county=county, span=span)
-    couple2 = couple_generate((sequence[3], sequence[4]), date, state, county=county, span=span)
-    single = sentence_generate(sequence[5], date, state, county=county, span=span)
-    second_para = couple1 + couple2 + single
+    couple1 = couple_generate((sequence[0], sequence[1]), date, state, county=county, span=span)
+    couple2 = couple_generate((sequence[2], sequence[3]), date, state, county=county, span=span)
+    couple3 = couple_generate((sequence[4], sequence[5]), date, state, county=county, span=span)
+    # single = sentence_generate(sequence[5], date, state, county=county, span=span)
+    second_para = couple1 + couple2 + couple3
 
     # ratio
-    third_para = ratio_generate(date, state=state, span=span)
+    # third_para = ratio_generate(date, state=state, span=span)
 
     # ending
-    ending = story_ending(date, state, county, span)
+    # ending = story_ending(date, state, county, span)
+    ending = ending_generate(date, state, county=county, attribute=random.choice(['cases', 'deaths']))
 
-    story = "{}\n{}\n{}\n{}\n".format(first_para, second_para, third_para, ending)
+    story = "{}\n\n{}\n\n{}\n".format(beginning, second_para, ending)
     story = capitalize_article(story)
     print(story)
 
-    with open('../{}-{}.txt'.format(date, state if state else 'us'), 'a+') as f:
+    with open('../{}-{}.txt'.format(date, state if state else 'us'), 'w') as f:
         f.write(story)
 
 
@@ -389,5 +530,5 @@ def weekly_report(date, state=None, county=None):
 if __name__ == '__main__':
     # weekly_report('2020-05-03')
     # print(load_template('fatality rate', 'upward').template)
-    story_generate('2020-05-18', 'California', span=7)
+    story_generate('2020-05-23', 'California', span=7)
     # print(report_sequence('2020-05-11', 'Ohio', my_span=7))
