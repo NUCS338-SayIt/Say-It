@@ -300,16 +300,17 @@ class Covid19(object):
         :return: dict, e.g. {'rank': 1, 'aboves': ['Illinois', 'California']}
         """
         df = self.df_states.copy()
-        df = df[df['state'] == state]
         if county:
             df = self.df_counties.copy()
-            df = df[(df['state'] == state) & (df['county'] == county)]
+            df = df[df['state'] == state]
 
-        ranks = []
+        data_list, ranks = [], []
         if scale == 'cumulative':
             df = df[df['date'] == date]
             df.sort_values(by=[attribute], inplace=True, ascending=False)
             ranks = df['county'].to_list() if county else df['state'].to_list()
+            for idx, row in df.iterrows():
+                data_list.append((row['county'] if county else row['state'], row[attribute]))
         elif scale == 'new':
             peers = df['county'].unique() if county else df['state'].unique()
 
@@ -328,9 +329,16 @@ class Covid19(object):
             ranks = [peer for peer, newly in data_list]
 
         rank = ranks.index(county if county else state)
-        aboves = ranks[rank - 2 if rank >= 2 else 0: rank] if rank < 10 else ranks[0: 2]
+        # aboves = ranks[rank - 2 if rank >= 2 else 0: rank] if rank < 10 else ranks[0: 2]
+        aboves = data_list[max(rank - 3, 0): rank]
+        tops = data_list[0: min(len(data_list), 3)]
 
-        return {'rank': rank + 1, 'aboves': aboves}
+        for i in range(len(aboves), 3):
+            aboves.insert(0, ('', 0))
+        for i in range(len(tops), 3):
+            tops.insert(0, ('', 0))
+
+        return {'rank': rank + 1, 'aboves': aboves, 'tops': tops}
 
     def trend_description(self, date, attribute, state, county=None, scale='cumulative'):
         """
@@ -492,5 +500,45 @@ class Covid19(object):
         data = response.json()
         return int(data[1][0])
 
+    def ending_main(self, date, state, attribute='cases'):
+        df = self.df_counties.copy()
+        df = df[df['state'] == state]
+        df = df.reset_index(drop=True)
+
+        peers = df['county'].unique()
+
+        today = datetime.datetime.strptime(date, '%Y-%m-%d')
+        yesterday = (today - datetime.timedelta(days=1)).strftime('%Y-%m-%d')
+        today = date
+
+        data_list = []
+        total_newly = 0
+        for peer in peers:
+            data_today = df[(df['date'] == today) & (df['county'] == peer)]
+            data_yesterday = df[(df['date'] == yesterday) & (df['county'] == peer)]
+
+            newly = data_today.iloc[0][attribute] - data_yesterday.iloc[0][attribute] if not data_yesterday.empty else 0
+            if newly > 0:
+                total_newly += newly
+                data_list.append((peer, newly))
+        data_list = sorted(data_list, key=lambda x: x[1], reverse=True)
+        # ranks = [peer for peer, newly in data_list]
+
+        if len(data_list) < 3:
+            raise IndexError
+        county1, county1_new = data_list[0]
+        county2, county2_new = data_list[1]
+        county3, county3_new = data_list[-1]
+
+        return {'county1': county1, 'county1_new': county1_new,
+                'county2': county2, 'county2_new': county2_new,
+                'county3': county3, 'county3_new': county3_new,
+                'total': total_newly}
 
 
+
+
+if __name__ == '__main__':
+    covid = Covid19()
+    print(covid.rank_among_peers('2020-05-16', 'cases', 'Texas', scale='new'))
+    # print(covid.ending_main('2020-05-16', 'Illinois', 'cases'))
