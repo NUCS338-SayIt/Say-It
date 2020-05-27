@@ -1,5 +1,5 @@
-${attribute} has ${adverb} fallen by ${rate} this ${span}, suggesting a downward trend.
-${attribute} of this ${span} declined to ${current} as compared with ${previous} in last ${span}.
-we saw a ${adverb} reduction in ${attribute} this ${span}, from previous ${previous} to ${current}.
+according to the lastest statistics, ${attribute} has ${adverb} fallen by ${rate} this ${span}, suggesting a downward trend and a sign of getting better.
+it can be observed from the latest update on covid-19 that ${attribute} of this ${span} declined to ${current} as compared with ${previous} in last ${span}.
+based on the newly-collected epidemic data, we saw a ${adverb} reduction in ${attribute} this ${span}, from previous ${previous} to ${current}.
 this ${span} ${attribute} was reported to be ${current}, from which a ${adverb} decrease of ${rate} could be observed compared to last ${span}.
-based on the latest statistics on ${attribute}, we could notice a drop by ${rate} from last ${span}'s ${previous}.
+based on the latest statistics on ${attribute}, we could notice a drop by ${rate} from last ${span}'s ${previous}, probably indicating a turning point.
