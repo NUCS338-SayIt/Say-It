@@ -1,7 +1,9 @@
 {
-  "downward": ["we are seeing hope in reopening the country and everything will be fine for sure.", "it is hopeful that COVID-19 will have less impact on our lives and we can expect everything to recover.",
-    "there is more hope that we can overcome the COVID-19 pandemic so let's keep fighting against it and see what happens next."],
-  "upward": ["as it is still increasing, please take proper precautions, and do not lose hope anyway.", "please take protective measures when appropriate, and keep an eye on the latest news.",
-    "since the numbers are still rising, it may still take some time before we can return to normal social lives.",
-    "please follow the guidelines and practice social distance, and do everything you can to protect yourself.", "keep an eye out for updates on COVID-19, and stay both physically and mentally healthy."]
+  "downward": ["The situation is getting better, maybe it won't be long before people get back to normal daily lives.",
+    "the situation is getting better, and it is hopeful that the virus will have less impact on people's daily lives.",
+    "the pandemic is receding, and it is hopeful that the virus will have less impact on people's daily lives."],
+  "upward": ["people living in related regions shall take protective measures when appropriate, and keep track of the latest news.",
+    "according to the current situation, it may still take some time before people can return to normal social lives.",
+    "people living in related regions shall follow the guidelines of the government, practice social distance, and keep protecting themselves.",
+    "it is hard to say that situation is getting better, and people living in related regions shall keep track of further updates on COVID-19."]
 }
