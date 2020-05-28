@@ -332,6 +332,8 @@ def beginning_generate(date, state, county=None, attribute='cases'):
     top, top_total_cases = tops[0]
     diff_between_top = top_total_cases - total_cases
 
+    trend_description = covid.trend_description(date, attribute, state, county=county)
+
     date = datetime.datetime.strptime(date, '%Y-%m-%d')
     d = {
         'date': date.strftime('%A %d %B %Y'),
@@ -360,7 +362,7 @@ def beginning_generate(date, state, county=None, attribute='cases'):
         section = 'others'
 
     beginning_raw = load_template(attribute, section, beginning=True)
-    beginning = beginning_raw.safe_substitute(d)
+    beginning = beginning_raw.safe_substitute(d) + trend_description
 
     return beginning
 
