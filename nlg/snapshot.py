@@ -16,14 +16,14 @@ TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), '../template/')
 
 
 transitionWords = {
-    'similarity': ['likewise', 'similarly', 'together with',
-                   'moreover', 'furthermore'],
+    'similarity': ['likewise', 'similarly', 'on the other hand',
+                   'in like manner', 'identically'],
     'opposition': ['in contrast', 'on the contrary', 'however', 'while', 'nevertheless',
                    'nonetheless']
 }
 
 degreeAdverbs = {
-    '-1': ['slightly', 'gradually', 'marginally', 'slightly'],
+    '-1': ['slightly', 'gradually', 'marginally'],
     '0': ['consistently', 'steadily'],
     '1': ['considerably', 'dramatically', 'enormously', 'remarkably']
 }
