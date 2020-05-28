@@ -472,7 +472,7 @@ def story_generate(date, state, county=None, span=7):
     couple2 = couple_generate((sequence[2], sequence[3]), date, state, county=county, span=span)
     couple3 = couple_generate((sequence[4], sequence[5]), date, state, county=county, span=span)
     # single = sentence_generate(sequence[5], date, state, county=county, span=span)
-    second_para = couple1 + "In addition, " + couple2 + couple3
+    second_para = couple1 + "In addition, " + couple2 + "Finally, "+ couple3
 
     # ratio
     # third_para = ratio_generate(date, state=state, span=span)
@@ -530,5 +530,5 @@ def weekly_report(date, state=None, county=None):
 if __name__ == '__main__':
     # weekly_report('2020-05-03')
     # print(load_template('fatality rate', 'upward').template)
-    story_generate('2020-05-23', 'California', span=7)
+    story_generate('2020-04-23', 'California', span=7)
     # print(report_sequence('2020-05-11', 'Ohio', my_span=7))
