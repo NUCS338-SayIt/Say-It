@@ -1,2 +1,2 @@
 ${attribute} count reached ${current}.
-The ${scale} recorded ${current} ${attribute} in total.
+${attribute} recorded ${current} in total.

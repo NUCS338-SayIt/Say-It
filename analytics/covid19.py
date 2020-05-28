@@ -5,6 +5,7 @@ from statsmodels.tsa.stattools import adfuller as ADF
 import pandas as pd
 import numpy as np
 import datetime
+from sklearn.linear_model import LinearRegression
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), '../data/')
 # DATA_DIR = r'C:\Users\86139\Desktop\西北大学\CS338\Project\Say-It\analytics\data'
@@ -348,7 +349,7 @@ class Covid19(object):
         :param state: str, e.g. 'Illinois'
         :param county: str, e.g. 'Cook'
         :param scale: str, 'new' or 'cumulative'
-        :return: str, e.g. 'rising', 'descending'
+        :return: str, a sentence
         """
 
         df = self.df_states.copy()
@@ -364,40 +365,74 @@ class Covid19(object):
             df['new'] = df['new'].shift(-1)
             input_data = np.array(df['new'][:-2].values)
 
-        n = input_data.shape[0]
-        sum_sgn = 0
-        for i in np.arange(n):
-            if i <= (n - 1):
-                for j in np.arange(i + 1, n):
-                    if input_data[j] > input_data[i]:
-                        sum_sgn = sum_sgn + 1
-                    elif input_data[j] < input_data[i]:
-                        sum_sgn = sum_sgn - 1
-                    else:
-                        sum_sgn = sum_sgn
-        if n <= 10:
-            z_value = sum_sgn / (n * (n - 1) / 2)
+        if input_data.size < 13:
+            return ""
+        lastest = input_data[-12:]
+        std_lastest = (lastest - np.min(lastest)) / (np.max(lastest) - np.min(lastest))
+        print(std_lastest)
+        today = std_lastest[-1]
+        last_ten = std_lastest[:10]
+        index = np.arange(10)
+
+        reg = LinearRegression().fit(index.reshape(-1, 1), last_ten.reshape(-1, 1))
+        intercept = last_ten - reg.coef_ * index
+        max_value = reg.coef_ * 11 + np.max(intercept)
+        min_value = reg.coef_ * 11 + np.min(intercept)
+
+        if reg.coef_ > 0.05:
+            sign1 = "in a rising channel"
+        elif reg.coef_ < -0.05:
+            sign1 = "in a descending channel"
         else:
-            if sum_sgn > 0:
-                z_value = (sum_sgn - 1) / np.sqrt(n * (n - 1) * (2 * n + 5) / 18)
-            elif sum_sgn == 0:
-                z_value = 0
-            else:
-                z_value = (sum_sgn + 1) / np.sqrt(n * (n - 1) * (2 * n + 5) / 18)
-        ADF_result = ADF(input_data, 0)
-        # 99% ——> +—2.576
-        # 95% ——> +—1.96
-        # 90% ——> +—1.645
-        if ADF_result[1] < 0.01:
-            result = 'remaining relatively stable'
+            ave = np.mean(lastest[:10])
+            sign1 = "fluctuating around %d cases" % ave
+
+        sentence1 = "Based on the data from the past ten days, %s %s of this region is %s " % (scale, attribute, sign1)
+
+        if min_value <= today <= max_value:
+            sentence2 = "and there is no sign of breakthrough."
+        elif today < min_value:
+            sentence2 = "and today's data shows a sign of downward breakthrough."
         else:
-            if 1.96 < np.abs(z_value) <= 2.576:
-                result = 'rising' if z_value > 0 else 'descending'
-            elif np.abs(z_value) > 2.576:
-                result = 'significantly rising' if z_value > 0 else 'significantly descending'
-            else:
-                result = 'fluctuating'
-        return result
+            sentence2 = "and today's data shows a sign of upward breakthrough."
+
+        return sentence1 + sentence2
+
+        # Total trend
+        # n = input_data.shape[0]
+        # sum_sgn = 0
+        # for i in np.arange(n):
+        #     if i <= (n - 1):
+        #         for j in np.arange(i + 1, n):
+        #             if input_data[j] > input_data[i]:
+        #                 sum_sgn = sum_sgn + 1
+        #             elif input_data[j] < input_data[i]:
+        #                 sum_sgn = sum_sgn - 1
+        #             else:
+        #                 sum_sgn = sum_sgn
+        # if n <= 10:
+        #     z_value = sum_sgn / (n * (n - 1) / 2)
+        # else:
+        #     if sum_sgn > 0:
+        #         z_value = (sum_sgn - 1) / np.sqrt(n * (n - 1) * (2 * n + 5) / 18)
+        #     elif sum_sgn == 0:
+        #         z_value = 0
+        #     else:
+        #         z_value = (sum_sgn + 1) / np.sqrt(n * (n - 1) * (2 * n + 5) / 18)
+        # ADF_result = ADF(input_data, 0)
+        # # 99% ——> +—2.576
+        # # 95% ——> +—1.96
+        # # 90% ——> +—1.645
+        # if ADF_result[1] < 0.01:
+        #     result = 'remaining relatively stable'
+        # else:
+        #     if 1.96 < np.abs(z_value) <= 2.576:
+        #         result = 'rising' if z_value > 0 else 'descending'
+        #     elif np.abs(z_value) > 2.576:
+        #         result = 'significantly rising' if z_value > 0 else 'significantly descending'
+        #     else:
+        #         result = 'fluctuating'
+        # return result
 
     """
     Additional Data needed
