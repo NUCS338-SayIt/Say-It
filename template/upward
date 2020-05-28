@@ -1,5 +1,5 @@
 based on the lastest data, ${attribute} has ${adverb} ticked upward from only ${previous} in last week to over ${current} this week.
-${attribute}, which is currently ${current}, saw a ${adverb} rise of ${rate} compared to last ${span}, probably indicating things have not yet gotten better.
+${attribute}, which is currently ${current}, has had a ${adverb} rise of ${rate} compared to last ${span}, which is ${adverb} higher than that of last ${span}.
 according to the newly-collected epidemic data, it is observed that ${attribute} reached ${current}, rising ${rate} compared with last ${span}.
 according to lastest data, ${attribute} increased ${rate} and came up to ${current} this ${span}, ${adverb} higher than that of last ${span}.
-it is newly reported that ${attribute} climbed to ${current}, going up by ${rate}, suggesting that the turning point is still waited for.
+it is newly reported that ${attribute} climbed to ${current}, going up by ${rate}, which is ${adverb} higher than that of last ${span}.
