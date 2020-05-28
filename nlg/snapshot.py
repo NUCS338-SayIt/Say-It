@@ -460,7 +460,7 @@ def capitalize_article(article):
 
 
 def story_generate(date, state, county=None, span=7):
-    sequence = report_sequence(date, state=state, my_span=span)
+    sequence = report_sequence(date, state=state, county=None, my_span=span)
 
     # Beginning
     # beginning = sentence_generate(sequence[0], date, state, county, span, beginning=True)
