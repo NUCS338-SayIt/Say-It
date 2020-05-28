@@ -16,7 +16,7 @@ TEMPLATE_DIR = os.path.join(os.path.dirname(__file__), '../template/')
 
 
 transitionWords = {
-    'similarity': ['likewise', 'similarly', 'on the other hand',
+    'similarity': ['likewise', 'similarly',
                    'in like manner', 'identically'],
     'opposition': ['in contrast', 'on the contrary', 'however', 'while', 'nevertheless',
                    'nonetheless']
@@ -472,7 +472,7 @@ def story_generate(date, state, county=None, span=7):
     couple2 = couple_generate((sequence[2], sequence[3]), date, state, county=county, span=span)
     couple3 = couple_generate((sequence[4], sequence[5]), date, state, county=county, span=span)
     # single = sentence_generate(sequence[5], date, state, county=county, span=span)
-    second_para = couple1 + couple2 + couple3
+    second_para = couple1 + "In addition, " + couple2 + couple3
 
     # ratio
     # third_para = ratio_generate(date, state=state, span=span)
