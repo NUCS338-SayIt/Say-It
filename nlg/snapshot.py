@@ -319,7 +319,7 @@ def beginning_generate(date, state, county=None, attribute='cases'):
     else:
         newly_cases, total_cases = covid.death_cases(date, state=state, county=county, span=1)
         _, previous_total_cases = covid.death_cases(yesterday, state=state, county=county, span=1)
-    increase_ratio = int(round((total_cases - previous_total_cases) * 1.0 / previous_total_cases, 0))
+    increase_ratio = round((total_cases - previous_total_cases) * 100.0 / previous_total_cases, 1)
 
     rank_data = covid.rank_among_peers(date, attribute, state, county=county, scale='cumulative')
     rank = rank_data['rank']
@@ -341,7 +341,7 @@ def beginning_generate(date, state, county=None, attribute='cases'):
         'newly_cases': num_format(newly_cases),
         'total_cases': num_format(total_cases),
         'previous_total_cases': num_format(previous_total_cases),
-        'increase_ratio': increase_ratio,
+        'increase_ratio': '{}%'.format(increase_ratio),
         'scale': scale_dict['scale'],
         'larger_scale': scale_dict['larger_scale'],
         'total_cases_rank': rank,
