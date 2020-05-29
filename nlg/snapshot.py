@@ -461,7 +461,7 @@ def capitalize_article(article):
     return '\n'.join(uppercased)
 
 
-def story_generate(date, state, county=None, span=7):
+def story_generate(date, state, county=None, span=7, save=False):
     sequence = report_sequence(date, state=state, county=None, my_span=span)
 
     # Beginning
@@ -487,46 +487,9 @@ def story_generate(date, state, county=None, span=7):
     story = capitalize_article(story)
     print(story)
 
-    with open('../{}-{}.txt'.format(date, state if state else 'us'), 'w') as f:
-        f.write(story)
-
-
-def weekly_report(date, state=None, county=None):
-    with open(os.path.join(TEMPLATE_DIR, 'weekly_report')) as f:
-        template_raw = f.read()
-    template = Template(template_raw)
-
-
-    covid = Covid19()
-    new_confirmed_cases, cumulative_confirmed_cases = covid.confirmed_cases(date, state=state, county=county, span=7)
-    new_death_cases, cumulative_death_cases = covid.death_cases(date, state=state, county=county, span=7)
-    growth_rate = round(covid.growth_rate(date, state=state, county=county, span=7) * 100, 1)
-    death_rate = round(covid.death_rate(date, state=state, county=county, span=7)[0] * 100, 1)
-    trend = 'higher' if covid.death_rate_comparison(date, state=state, county=county, scale='week') == 'increase' else 'lower'
-    per_capita_scale = 100000
-    most_confirmed_cases_per_capita = covid.most_confirmed_cases_per_capita(date, state=state, scale=per_capita_scale, span=7)
-    least_confirmed_cases_per_capita = covid.most_confirmed_cases_per_capita(date, state=state, scale=per_capita_scale, span=7, type='least')
-    ratio = round(most_confirmed_cases_per_capita[0] / least_confirmed_cases_per_capita[0], 1)
-
-    d = {'date': date,
-         'state': state if state else 'US',
-         'new_confirmed_cases': locale.format_string('%d', new_confirmed_cases, grouping=True),
-         'cumulative_confirmed_cases': locale.format_string('%d', cumulative_confirmed_cases, grouping=True),
-         'new_death_cases': locale.format_string('%d', new_death_cases, grouping=True),
-         'cumulative_death_cases': locale.format_string('%d', cumulative_death_cases, grouping=True),
-         'growth_rate': growth_rate,
-         'death_rate': death_rate,
-         'trend': trend,
-         'type': 'county' if state else 'state',
-         'most_confirmed_cases_per_capita': most_confirmed_cases_per_capita[1],
-         'most_confirmed_cases': most_confirmed_cases_per_capita[0],
-         'per_capita_scale': locale.format_string('%d', per_capita_scale, grouping=True),
-         'ratio': ratio}
-    story = template.safe_substitute(d)
-    print(story)
-
-    with open('../{}-{}.txt'.format(date, state if state else 'us'), 'a+') as f:
-        f.write(story)
+    if save:
+        with open('./{}-{}.txt'.format(date, "{}-{}".format(state, county) if county else state), 'w') as f:
+            f.write(story)
 
 
 if __name__ == '__main__':

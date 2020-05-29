@@ -369,7 +369,7 @@ class Covid19(object):
             return ""
         lastest = input_data[-12:]
         std_lastest = (lastest - np.min(lastest)) / (np.max(lastest) - np.min(lastest))
-        print(std_lastest)
+        # print(std_lastest)
         today = std_lastest[-1]
         last_ten = std_lastest[:10]
         index = np.arange(10)
