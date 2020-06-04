@@ -31,15 +31,12 @@ degreeAdverbs = {
 covid = Covid19()
 
 
+# Loading template from file
 def load_template(render_type, trend=None, beginning=False, explanation=False, ending=False):
     if beginning:
         filename = os.path.join(TEMPLATE_DIR, 'beginning.json')
         with open(filename, 'r') as f:
             data = json.load(f)
-            # if render_type in data:
-            #     template_raw_list = data[render_type][trend]
-            # else:
-            #     template_raw_list = data['others'][trend]
             template_raw_list = data[render_type][trend]
     elif explanation:
         filename = os.path.join(TEMPLATE_DIR, 'explanation.json')
@@ -58,12 +55,15 @@ def load_template(render_type, trend=None, beginning=False, explanation=False, e
     return Template(random.choice(template_raw_list))
 
 
+# Randomly choosing a transition word
 def random_transition(key):
     return random.choice(transitionWords[key])
 
 
+# Randomly choosing a degree adverb
 def random_degree(key):
     return random.choice(degreeAdverbs[key])
+
 
 # Creating the Correlation Matrix
 def create_corr_df():
@@ -89,6 +89,7 @@ def create_corr_df():
     return corr_df
 
 
+# Get the order of attributes, considering both variation and correlation
 def report_sequence(date, state=None, county=None, my_span=1):
     # if the span and date is valid
     flag = covid.valid_span(date, state=state, county=county, span=my_span)
@@ -187,20 +188,18 @@ def report_sequence(date, state=None, county=None, my_span=1):
     return sequence
 
 
-def sentence_generate(data, date, state, county=None, span=7, beginning=False):
+# Generating a single sentence(one attribute)
+def sentence_generate(data, date, state, county=None, span=7):
     attribute, current, previous, rate = data['Name'], data['Current Value'], data['Previous Value'], data['Change Rate']
     trend = 'upward' if rate > 0.0 else 'downward'
-    template = load_template(attribute, trend=trend, beginning=beginning)
+    template = load_template(attribute, trend=trend)
 
     if isinstance(current, np.int64 or np.int32):
         current = locale.format_string('%d', current, grouping=True)
         previous = locale.format_string('%d', previous, grouping=True)
     elif isinstance(current, float):
-        # current = '{}%'.format(int(round(current)))
-        # previous = '{}%'.format(int(round(previous)))
         current = '{}%'.format(round(current, 1))
         previous = '{}%'.format(round(previous, 1))
-    # rate = abs(int(round(rate * 100)))
     rate = abs(round(rate * 100, 1))
 
     spans = {1: 'day', 7: 'week', 30: 'month'}
@@ -226,9 +225,9 @@ def sentence_generate(data, date, state, county=None, span=7, beginning=False):
     return template.safe_substitute(d)
 
 
+# Generating a couple sentence(two attributes)
 def couple_generate(couple, date, state, county=None, span=7):
     data1, data2 = couple
-    attribute1, attribute2 = data1['Name'], data2['Name']
     rate1, rate2 = data1['Change Rate'], data2['Change Rate']
 
     sent1 = sentence_generate(data1, date, state, county=county, span=span)
@@ -250,62 +249,19 @@ def couple_generate(couple, date, state, county=None, span=7):
     return para
 
 
-def ratio_generate(date, state, county=None, span=7):
-    per_capita_scale = 100000
-    most_confirmed_cases_per_capita = covid.most_confirmed_cases_per_capita(date, state=state, scale=per_capita_scale,
-                                                                            span=span)
-    least_confirmed_cases_per_capita = covid.most_confirmed_cases_per_capita(date, state=state, scale=per_capita_scale,
-                                                                             span=span, type='least')
-    ratio = int(round(most_confirmed_cases_per_capita[0] / least_confirmed_cases_per_capita[0], 1))
-    template_raw = 'The coronavirus has spread at a widely different rate and pace from ${type} to ${type} this ${span}. ' \
-                   '${most_confirmed_cases_per_capita} has the highest reported rate of confirmed cases, at nearly ' \
-                   '${most_confirmed_cases} per ${per_capita_scale} residents -- over ${ratio} times the ' \
-                   'rate of the ${type} with the lowest rate.'
-    template = Template(template_raw)
-    spans = {1: 'day', 7: 'week', 30: 'month'}
-    d = {
-        'type': 'county' if state else 'state',
-        'most_confirmed_cases_per_capita': most_confirmed_cases_per_capita[1],
-        'most_confirmed_cases': int(most_confirmed_cases_per_capita[0]),
-        'per_capita_scale': locale.format_string('%d', per_capita_scale, grouping=True),
-        'ratio': ratio,
-        'span': spans[span]
-    }
-
-    return template.safe_substitute(d)
-
-
-def story_ending(date, state, county=None, span=7):
-    if county:
-        highest = covid.highest_cases(date, state=state)
-    else:
-        highest = covid.highest_cases(date)
-    my_rank = covid.growth_rate_rank(date, span=span, state=state, county=county)
-    template_raw = 'Comparing with others, the growth rate of ${location} this ${span} ranked ${rank} among all ${scale1}. ' \
-                   '${highest} has the most confirmed cases in ${scale2}wide.'
-    template = Template(template_raw)
-    spans = {1: 'day', 7: 'week', 30: 'month'}
-    d = {
-        'location': county if county else state,
-        'span': spans[span],
-        'scale1': 'counties' if county else 'states',
-        'scale2': 'state' if county else 'nation',
-        'rank': my_rank,
-        'highest': highest
-    }
-    return template.safe_substitute(d)
-
-
+# Utility function: get last delta day
 def get_last_day_week(date, delta=1):
     today = datetime.datetime.strptime(date, '%Y-%m-%d')
     yesterday = (today - datetime.timedelta(days=delta)).strftime('%Y-%m-%d')
     return yesterday
 
 
+# Utility function: grouping number by thousand
 def num_format(number):
     return locale.format_string('%d', number, grouping=True)
 
 
+# Beginning paragraph of the story
 def beginning_generate(date, state, county=None, attribute='cases'):
     scale_dict = {
         'scale': 'county' if county else 'state',
@@ -367,6 +323,7 @@ def beginning_generate(date, state, county=None, attribute='cases'):
     return beginning
 
 
+# Ending paragraph of the story
 def ending_generate(date, state, county=None, attribute='cases'):
     if county:
         state_newly_cases, state_total_cases = covid.confirmed_cases(date, state=state, span=1)
@@ -440,6 +397,7 @@ def ending_generate(date, state, county=None, attribute='cases'):
     return ending
 
 
+# Utility function: capitalize sentence
 def capitalize_article(article):
     def capitalize_para(para):
         def capitalize_sentence(sentence):
@@ -461,26 +419,20 @@ def capitalize_article(article):
     return '\n'.join(uppercased)
 
 
+# Main function: story generation
 def story_generate(date, state, county=None, span=7, save=False):
     sequence = report_sequence(date, state=state, county=None, my_span=span)
 
     # Beginning
-    # beginning = sentence_generate(sequence[0], date, state, county, span, beginning=True)
     beginning = beginning_generate(date, state, county=county, attribute=random.choice(['cases', 'deaths']))
 
     # Second paragraph: 1,2 + 3,4 + 5,6
-    second_para = ""
     couple1 = couple_generate((sequence[0], sequence[1]), date, state, county=county, span=span)
     couple2 = couple_generate((sequence[2], sequence[3]), date, state, county=county, span=span)
     couple3 = couple_generate((sequence[4], sequence[5]), date, state, county=county, span=span)
-    # single = sentence_generate(sequence[5], date, state, county=county, span=span)
-    second_para = couple1 + "In addition, " + couple2 + "Finally, "+ couple3
-
-    # ratio
-    # third_para = ratio_generate(date, state=state, span=span)
+    second_para = couple1 + "In addition, " + couple2 + "Finally, " + couple3
 
     # ending
-    # ending = story_ending(date, state, county, span)
     ending = ending_generate(date, state, county=county, attribute=random.choice(['cases', 'deaths']))
 
     story = "{}\n\n{}\n\n{}\n".format(beginning, second_para, ending)
@@ -490,10 +442,3 @@ def story_generate(date, state, county=None, span=7, save=False):
     if save:
         with open('./{}-{}.txt'.format(date, "{}-{}".format(state, county) if county else state), 'w') as f:
             f.write(story)
-
-
-if __name__ == '__main__':
-    # weekly_report('2020-05-03')
-    # print(load_template('fatality rate', 'upward').template)
-    story_generate('2020-04-23', 'California', span=7)
-    # print(report_sequence('2020-05-11', 'Ohio', my_span=7))

@@ -292,13 +292,13 @@ class Covid19(object):
 
     def rank_among_peers(self, date, attribute, state, county=None, scale='cumulative'):
         """
-        Get rank among peers. If rank <= 10, return at most two peer in front of it, otherwise return top 2.
+        Get rank among peers. If rank <= 10, return at most three peer in front of it, otherwise return top 3.
         :param date: str, e.g. '2020-04-23'
         :param attribute: str, e.g. 'cases' or 'deaths'
         :param state: str, e.g. 'Illinois'
         :param county: str, e.g. 'Cook'
         :param scale: str, 'new' or 'cumulative'
-        :return: dict, e.g. {'rank': 1, 'aboves': ['Illinois', 'California']}
+        :return: dict, e.g. {'rank': 1, 'aboves': ['Illinois', 'California'], 'tops': ['New York', 'Illinois', 'California']}
         """
         df = self.df_states.copy()
         if county:
@@ -452,28 +452,6 @@ class Covid19(object):
 
         return round(confirmed_cases / population * scale, 1)
 
-    def cure_rate(self, date, state=None, county=None, span=1):
-        """
-        Cure rate for today or this week
-        :param date: str, e.g. '2020-04-23'
-        :param state: str, e.g. 'Illinois'
-        :param county: str, e.g. 'Cook'
-        :param span: int, e.g. 1 for today, 7 for this week
-        :return: float
-        """
-        raise NotImplementedError
-
-    def cure_rate_comparison(self, date, state=None, county=None, scale='day'):
-        """
-        Compare cure rate between today/yesterday, this week/last week
-        :param date: str, e.g. '2020-04-23'
-        :param state: str, e.g. 'Illinois'
-        :param county: str, e.g. 'Cook'
-        :param scale: 'day' or 'week'
-        :return: 'increase' or 'decrease'
-        """
-        raise NotImplementedError
-
     def most_confirmed_cases_per_capita(self, date, state=None, scale=100000, span=999, type='most'):
         """
         The state/county with the most confirmed cases per capita
@@ -536,6 +514,13 @@ class Covid19(object):
         return int(data[1][0])
 
     def ending_main(self, date, state, attribute='cases'):
+        """
+        Return some data used in the ending paragraph
+        :param date: str, e.g. '2020-04-23'
+        :param state: str, e.g. 'Illinois'
+        :param attribute: str, e.g. 'cases' or 'deaths'
+        :return:
+        """
         df = self.df_counties.copy()
         df = df[df['state'] == state]
         df = df.reset_index(drop=True)
@@ -557,7 +542,6 @@ class Covid19(object):
                 total_newly += newly
                 data_list.append((peer, newly))
         data_list = sorted(data_list, key=lambda x: x[1], reverse=True)
-        # ranks = [peer for peer, newly in data_list]
 
         if len(data_list) < 3:
             raise IndexError
@@ -569,11 +553,3 @@ class Covid19(object):
                 'county2': county2, 'county2_new': county2_new,
                 'county3': county3, 'county3_new': county3_new,
                 'total': total_newly}
-
-
-
-
-if __name__ == '__main__':
-    covid = Covid19()
-    print(covid.rank_among_peers('2020-05-16', 'cases', 'Texas', scale='new'))
-    # print(covid.ending_main('2020-05-16', 'Illinois', 'cases'))
